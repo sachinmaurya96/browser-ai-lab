@@ -1,0 +1,154 @@
+@import 'tailwindcss';
+
+/* Theme switching via [data-theme] on <html>, falling back to the OS setting. */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+:root {
+  --paper: #f5f1ea;
+  --paper-2: #ece6db;
+  --card: #fffdf9;
+  --ink: #1b1a17;
+  --ink-2: #57524a;
+  --ink-3: #8b857b;
+  --rule: #d9d1c3;
+  --accent: #e8553a;
+  --accent-ink: #ffffff;
+  --accent-soft: #fbe3dc;
+  --sea: #1f7a6d;
+  --sea-soft: #d8eee9;
+  --sun: #c98a12;
+  --sun-soft: #f6ead0;
+  --danger: #b4321f;
+  --checker-a: #ffffff;
+  --checker-b: #e6e0d5;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --paper: #151412;
+    --paper-2: #1e1c19;
+    --card: #1b1a17;
+    --ink: #f1ece3;
+    --ink-2: #bdb5a8;
+    --ink-3: #847d72;
+    --rule: #34302a;
+    --accent: #ff6b4d;
+    --accent-ink: #1b1a17;
+    --accent-soft: #3a211b;
+    --sea: #5cc6b4;
+    --sea-soft: #16302b;
+    --sun: #f0b54a;
+    --sun-soft: #33281296;
+    --danger: #ff7a66;
+    --checker-a: #2a2824;
+    --checker-b: #201e1b;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --paper: #151412;
+  --paper-2: #1e1c19;
+  --card: #1b1a17;
+  --ink: #f1ece3;
+  --ink-2: #bdb5a8;
+  --ink-3: #847d72;
+  --rule: #34302a;
+  --accent: #ff6b4d;
+  --accent-ink: #1b1a17;
+  --accent-soft: #3a211b;
+  --sea: #5cc6b4;
+  --sea-soft: #16302b;
+  --sun: #f0b54a;
+  --sun-soft: #33281296;
+  --danger: #ff7a66;
+  --checker-a: #2a2824;
+  --checker-b: #201e1b;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-rule: var(--rule);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-sea: var(--sea);
+  --color-sea-soft: var(--sea-soft);
+  --color-sun: var(--sun);
+  --color-sun-soft: var(--sun-soft);
+  --color-danger: var(--danger);
+  --font-display: 'Instrument Serif', ui-serif, Georgia, serif;
+  --font-sans: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+}
+
+html,
+body {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Faint dot grid, like a lab notebook page. */
+.paper-grid {
+  background-image: radial-gradient(var(--rule) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+.checker {
+  background-color: var(--checker-a);
+  background-image:
+    linear-gradient(45deg, var(--checker-b) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--checker-b) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--checker-b) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--checker-b) 75%);
+  background-size: 18px 18px;
+  background-position: 0 0, 0 9px, 9px -9px, -9px 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+.caret::after {
+  content: '▍';
+  margin-left: 1px;
+  color: var(--accent);
+  animation: blink 1s steps(1) infinite;
+}
+
+@keyframes scan {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+.scanline {
+  animation: scan 1.6s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scanline,
+  .caret::after {
+    animation: none;
+  }
+}
