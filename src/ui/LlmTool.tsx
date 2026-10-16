@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Sparkles, Square } from 'lucide-react'
 import { useLlm } from '../lib/hooks'
+import type { LlmCandidate } from '../lib/llm.worker'
 import type { ModelInfo } from './ModelCard'
 import { Output, ToolPage } from './ToolPage'
-import { Button, CopyButton, Panel, Tag, cx, inputClass } from './kit'
+import { Button, CopyButton, Notice, Panel, Tag, cx, inputClass } from './kit'
 
 export interface Mode {
   id: string
@@ -25,7 +26,8 @@ export function LlmTool({
   note,
 }: {
   slug: string
-  modelId: string
+  /** A model id, or an ordered list of candidates (see ASSISTANT). */
+  modelId: string | LlmCandidate[]
   info: ModelInfo
   modes: Mode[]
   placeholder: string
@@ -53,6 +55,7 @@ export function LlmTool({
 
   return (
     <ToolPage slug={slug} model={llm.model} error={error} info={info}>
+      {llm.downgraded && <Notice tone="warn">This device can't run the main model (it needs WebGPU with half-precision support), so a smaller 0.5B model is being used. Results will be simpler; a desktop browser with WebGPU gives the best quality.</Notice>}
       <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Mode">
         {modes.map((m) => (
           <button key={m.id} type="button" role="radio" aria-checked={mode.id === m.id} onClick={() => { setMode(m); setExtra(m.extra?.options[0] ?? '') }} className={cx('rounded-full border px-3.5 py-1.5 text-sm transition-colors', mode.id === m.id ? 'border-ink bg-ink text-paper' : 'border-rule text-ink-2 hover:border-ink')}>

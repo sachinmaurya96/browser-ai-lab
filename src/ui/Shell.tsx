@@ -1,8 +1,9 @@
 import { Suspense, useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Coffee, Moon, Sun, WifiOff } from 'lucide-react'
+import { Coffee, Moon, Star, Sun, WifiOff } from 'lucide-react'
+import { useFavorites } from '../lib/favorites'
 import { LINKS } from './Home'
-import { CATEGORIES, TOOLS } from '../tools'
+import { CATEGORIES, TOOLS, type Tool } from '../tools'
 import { cx } from './kit'
 
 type Theme = 'light' | 'dark'
@@ -41,9 +42,45 @@ function Logo() {
   )
 }
 
+/** Sidebar link with a hover star to add/remove the tool from favourites. */
+function NavItem({ tool, fav, onToggle }: { tool: Tool; fav: boolean; onToggle: () => void }) {
+  return (
+    <div className="group relative">
+      <NavLink
+        to={`/${tool.slug}`}
+        className={({ isActive }) =>
+          cx('flex items-center gap-2.5 rounded-md py-1.5 pr-8 pl-3 text-sm transition-colors', isActive ? 'bg-ink text-paper' : 'text-ink-2 hover:bg-card hover:text-ink')
+        }
+      >
+        {({ isActive }) => (
+          <>
+            <tool.icon size={15} className={isActive ? 'text-accent' : undefined} />
+            <span className="truncate font-medium">{tool.name}</span>
+          </>
+        )}
+      </NavLink>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-label={fav ? `Remove ${tool.name} from favorites` : `Add ${tool.name} to favorites`}
+        aria-pressed={fav}
+        title={fav ? 'Remove from favorites' : 'Add to favorites'}
+        className={cx(
+          'absolute top-1/2 right-1.5 grid size-6 -translate-y-1/2 place-items-center rounded transition-opacity',
+          fav ? 'text-sun opacity-100' : 'text-ink-3 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 hover:text-sun',
+        )}
+      >
+        <Star size={13} fill={fav ? 'currentColor' : 'none'} />
+      </button>
+    </div>
+  )
+}
+
 export function Shell() {
   const [theme, toggleTheme] = useTheme()
   const { pathname } = useLocation()
+  const { favorites, toggle, isFavorite } = useFavorites()
+  const favTools = favorites.map((s) => TOOLS.find((t) => t.slug === s)).filter((t): t is Tool => !!t)
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -66,27 +103,21 @@ export function Shell() {
       <aside className="sticky top-0 hidden h-dvh flex-col border-r border-rule bg-paper-2/60 px-5 py-6 lg:flex">
         <Logo />
         <nav aria-label="Tools" className="-mx-2 mt-8 flex-1 space-y-5 overflow-y-auto px-2 pb-4">
+          <div>
+            <p className="mb-1.5 flex items-center gap-1.5 px-3 font-mono text-[10px] uppercase tracking-[0.16em] text-sun">
+              <Star size={11} fill="currentColor" /> Favorites
+            </p>
+            {favTools.length ? (
+              favTools.map((t) => <NavItem key={t.slug} tool={t} fav onToggle={() => toggle(t.slug)} />)
+            ) : (
+              <p className="px-3 text-xs leading-relaxed text-ink-3">Hover any tool and click ☆ to pin it here.</p>
+            )}
+          </div>
           {CATEGORIES.map((c) => (
             <div key={c.id}>
               <p className="mb-1.5 px-3 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">{c.id}</p>
               {TOOLS.filter((t) => t.category === c.id).map((t) => (
-                <NavLink
-                  key={t.slug}
-                  to={`/${t.slug}`}
-                  className={({ isActive }) =>
-                    cx(
-                      'flex items-center gap-2.5 rounded-md px-3 py-1.5 text-sm transition-colors',
-                      isActive ? 'bg-ink text-paper' : 'text-ink-2 hover:bg-card hover:text-ink',
-                    )
-                  }
-                >
-                  {({ isActive }) => (
-                    <>
-                      <t.icon size={15} className={isActive ? 'text-accent' : undefined} />
-                      <span className="truncate font-medium">{t.name}</span>
-                    </>
-                  )}
-                </NavLink>
+                <NavItem key={t.slug} tool={t} fav={isFavorite(t.slug)} onToggle={() => toggle(t.slug)} />
               ))}
             </div>
           ))}
@@ -113,7 +144,7 @@ export function Shell() {
           {themeButton}
         </div>
         <nav aria-label="Tools" className="flex gap-1.5 overflow-x-auto px-4 pb-3">
-          {TOOLS.map((t) => (
+          {[...favTools, ...TOOLS.filter((t) => !isFavorite(t.slug))].map((t) => (
             <NavLink
               key={t.slug}
               to={`/${t.slug}`}
@@ -124,7 +155,7 @@ export function Shell() {
                 )
               }
             >
-              <t.icon size={14} />
+              {isFavorite(t.slug) ? <Star size={13} className="text-sun" fill="currentColor" /> : <t.icon size={14} />}
               {t.name}
             </NavLink>
           ))}
@@ -145,6 +176,8 @@ export function Shell() {
 export function ToolIntro({ slug, children }: { slug: string; children?: React.ReactNode }) {
   const index = TOOLS.findIndex((t) => t.slug === slug)
   const tool = TOOLS[index]
+  const { isFavorite, toggle } = useFavorites()
+  const fav = isFavorite(slug)
   return (
     <header className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-rule pb-6">
       <div className="max-w-2xl">
@@ -154,7 +187,17 @@ export function ToolIntro({ slug, children }: { slug: string; children?: React.R
         <h1 className="mt-2 font-display text-5xl leading-none sm:text-6xl">{tool.name}</h1>
         <p className="mt-3 text-lg text-ink-2">{tool.blurb}</p>
       </div>
-      {children}
+      <div className="flex items-center gap-2">
+        {children}
+        <button
+          type="button"
+          onClick={() => toggle(slug)}
+          aria-pressed={fav}
+          className={cx('inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm transition-colors', fav ? 'border-sun bg-sun-soft text-sun' : 'border-rule text-ink-2 hover:border-ink hover:text-ink')}
+        >
+          <Star size={15} fill={fav ? 'currentColor' : 'none'} /> {fav ? 'Favorited' : 'Favorite'}
+        </button>
+      </div>
     </header>
   )
 }
