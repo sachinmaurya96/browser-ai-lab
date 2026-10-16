@@ -2,12 +2,13 @@ import { lazy, type ComponentType, type LazyExoticComponent } from 'react'
 import {
   AlignLeft, AudioLines, Box, Camera, Code2, Copy, FileText, FolderTree, HeartPulse, Languages, Layers3, Maximize2,
   MessageCircleQuestion, Combine, SplitSquareHorizontal, LayoutGrid, FileImage, Images, FileType, Stamp, Minimize2, FileSearch, FileScan, Mic2, MessagesSquare, Mic, PenLine, ScanLine, ScanText, Scissors, ShieldAlert, ShieldCheck, Tags,
-  Telescope, Braces, KeyRound, Binary, Fingerprint, Dices, Regex, GitCompare, Clock, Palette, Sheet, QrCode, ImageDown, type LucideIcon,
+  Telescope, Type, Crop, Braces, KeyRound, Binary, Fingerprint, Dices, Regex, GitCompare, Clock, Palette, Sheet, QrCode, ImageDown, type LucideIcon,
 } from 'lucide-react'
 
-export type Category = 'PDF' | 'Image' | 'Audio' | 'Text' | 'Assistants' | 'Developer' | 'Dev Utilities'
+export type Category = 'Social' | 'PDF' | 'Image' | 'Audio' | 'Text' | 'Assistants' | 'Developer' | 'Dev Utilities'
 
 export const CATEGORIES: { id: Category; blurb: string }[] = [
+  { id: 'Social', blurb: 'Style text and size images for social media' },
   { id: 'PDF', blurb: 'Edit, convert and read PDFs, privately' },
   { id: 'Image', blurb: 'Edit, read and understand pictures' },
   { id: 'Audio', blurb: 'Speech, voices and sounds' },
@@ -31,6 +32,10 @@ export interface Tool {
 // Every page (and its worker + model) is code-split and only fetched when its
 // route is opened.
 export const TOOLS: Tool[] = [
+  // Social
+  { slug: 'text-style', name: 'Text Styler', tagline: 'Bold & italic for posts', category: 'Social', icon: Type, stack: ['local'], blurb: 'Unicode bold, italic and more for LinkedIn and X headings.', page: lazy(() => import('./tools/social/StylePage')) },
+  { slug: 'social-image', name: 'Social Image Sizer', tagline: 'Every platform size', category: 'Social', icon: Crop, stack: ['local'], blurb: 'Crop one image to LinkedIn, Instagram, X, YouTube and story sizes at once.', page: lazy(() => import('./tools/social/ImageSizePage')) },
+
   // PDF
   { slug: 'pdf-merge', name: 'Merge PDF', tagline: 'Combine files', category: 'PDF', icon: Combine, stack: ['pdf-lib'], blurb: 'Join several PDFs into one, in the order you choose.', page: lazy(() => import('./tools/pdf/MergePage')) },
   { slug: 'pdf-split', name: 'Split PDF', tagline: 'Extract pages', category: 'PDF', icon: SplitSquareHorizontal, stack: ['pdf-lib'], blurb: 'Pull out selected pages, or split into single pages or chunks.', page: lazy(() => import('./tools/pdf/SplitPage')) },
@@ -66,7 +71,7 @@ export const TOOLS: Tool[] = [
   { slug: 'redact', name: 'Redactor', tagline: 'Remove personal data', category: 'Text', icon: ShieldCheck, stack: ['BERT NER'], blurb: 'Strip names, emails, phones, cards and IDs before sharing text.', page: lazy(() => import('./tools/redact/RedactPage')) },
 
   // Assistants
-  { slug: 'chat', name: 'Private Chat', tagline: 'Offline AI assistant', category: 'Assistants', icon: MessagesSquare, stack: ['Qwen2.5-1.5B'], blurb: 'A ChatGPT-style assistant that never sends your words anywhere.', page: lazy(() => import('./tools/chat/ChatPage')) },
+  { slug: 'chat', name: 'Private Chat', tagline: 'Offline AI assistant', category: 'Assistants', icon: MessagesSquare, stack: ['Llama 3.2 1B'], blurb: 'A ChatGPT-style assistant that never sends your words anywhere.', page: lazy(() => import('./tools/chat/ChatPage')) },
   { slug: 'writer', name: 'Rewriter', tagline: 'Grammar, tone & replies', category: 'Assistants', icon: PenLine, stack: ['Qwen2.5-0.5B'], blurb: 'Fix grammar, change tone, shorten text or draft a reply.', page: lazy(() => import('./tools/writer/WriterPage')) },
 
   // Developer

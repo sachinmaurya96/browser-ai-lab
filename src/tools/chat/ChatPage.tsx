@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { Send, Square, Trash2 } from 'lucide-react'
-import { useLlm } from '../../lib/hooks'
+import { ASSISTANT, useLlm } from '../../lib/hooks'
 import type { ChatMessage } from '../../lib/llm.worker'
 import { ToolPage } from '../../ui/ToolPage'
-import { Button, Chip, CopyButton, Panel, Tag, cx, inputClass } from '../../ui/kit'
+import { Button, Chip, CopyButton, Notice, Panel, Tag, cx, inputClass } from '../../ui/kit'
 
 const SYSTEM = 'You are a friendly, concise assistant running privately on the user\'s device. Give clear, accurate answers. If you are unsure, say so.'
 const STARTERS = ['Explain compound interest simply', 'Give me 5 dinner ideas with rice and eggs', 'Write a polite leave request email', 'What are good habits for better sleep?']
 
 export default function ChatPage() {
-  const llm = useLlm('onnx-community/Qwen2.5-1.5B-Instruct')
+  const llm = useLlm(ASSISTANT)
   const [history, setHistory] = useState<ChatMessage[]>([])
   const [draft, setDraft] = useState('')
   const [live, setLive] = useState('')
@@ -40,7 +40,8 @@ export default function ChatPage() {
   }
 
   return (
-    <ToolPage slug="chat" model={llm.model} error={error} info={{ name: 'onnx-community/Qwen2.5-1.5B-Instruct', href: 'https://huggingface.co/onnx-community/Qwen2.5-1.5B-Instruct', size: '~1.1 GB', task: 'chat assistant' }}>
+    <ToolPage slug="chat" model={llm.model} error={error} info={{ name: 'onnx-community/Llama-3.2-1B-Instruct-q4f16', href: 'https://huggingface.co/onnx-community/Llama-3.2-1B-Instruct-q4f16', size: '~1.2 GB', task: 'chat assistant' }}>
+      {llm.downgraded && <Notice tone="warn">This device can't run the main model (it needs WebGPU with half-precision support), so a smaller 0.5B model is being used. Results will be simpler; a desktop browser with WebGPU gives the best quality.</Notice>}
       <Panel kicker="Private chat" title="Nothing you type leaves this device" actions={<>{llm.tps && <Tag>{llm.tps.toFixed(1)} tok/s</Tag>}<Button size="sm" tone="ghost" disabled={llm.streaming || !history.length} onClick={() => setHistory([])}><Trash2 size={15} /> New chat</Button></>}>
         <div className="flex h-[60vh] min-h-[420px] flex-col">
           <div className="flex-1 space-y-4 overflow-y-auto pr-1">
