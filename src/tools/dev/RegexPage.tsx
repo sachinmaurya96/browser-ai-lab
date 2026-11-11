@@ -65,7 +65,7 @@ export default function RegexPage() {
       <div className="flex flex-wrap items-center gap-2">
         {FLAGS.map(([f, label]) => (
           <button key={f} type="button" title={label} onClick={() => setFlags(flags.includes(f) ? flags.replace(f, '') : flags + f)} className={cx('rounded border px-2 py-0.5 font-mono text-sm', flags.includes(f) ? 'border-ink bg-ink text-paper' : 'border-rule text-ink-3')}>
-            {f} <span className="font-sans text-xs opacity-70">{label}</span>
+            {f} <span className="font-sans text-xs">{label}</span>
           </button>
         ))}
         <span className="mx-2 h-4 w-px bg-rule" />

@@ -51,6 +51,7 @@ export function AudioUploader({ onFile, disabled }: { onFile(file: File): void; 
       <input
         ref={input}
         type="file"
+        aria-label="Choose an audio file"
         accept="audio/*,video/*,.flac,.m4a,.opus"
         className="sr-only"
         tabIndex={-1}

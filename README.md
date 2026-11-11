@@ -2,7 +2,7 @@
 
 50 free tools that run entirely in your browser: AI for images, audio, text and PDFs, plus instant developer and social-media utilities. There is no inference backend, no API keys and no sign-up, and nothing is uploaded. Models download once from the Hugging Face Hub, are cached, and run locally on WebGPU, falling back to WebAssembly.
 
-Live at **https://browserailab.in**. Built with Next.js (App Router) and deployed on Vercel.
+Live at **https://www.browserailab.com**. Built with Next.js (App Router) and deployed on Vercel.
 
 | Category | Tools |
 |---|---|

@@ -17,7 +17,7 @@ export default function WriterPage() {
     <LlmTool
       slug="writer"
       modelId="onnx-community/Qwen2.5-0.5B-Instruct"
-      info={{ name: 'onnx-community/Qwen2.5-0.5B-Instruct', href: 'https://huggingface.co/onnx-community/Qwen2.5-0.5B-Instruct', size: '~480 MB', task: 'rewriting' }}
+      info={{ name: 'onnx-community/Qwen2.5-0.5B-Instruct', href: 'https://huggingface.co/onnx-community/Qwen2.5-0.5B-Instruct', size: '~760 MB', task: 'rewriting' }}
       modes={MODES}
       placeholder="Paste an email, post, essay paragraph, message…"
       note="Shares its model with Triage, so if you've used one, the other loads instantly."

@@ -43,7 +43,7 @@ export default function ObjectsPage() {
                 <img src={img.image.url} alt="Analysed photo" className="max-h-[520px] object-contain" />
                 {shown.map((d, i) => (
                   <div key={i} className="absolute border-2" style={{ borderColor: color(d.label), left: `${d.box.xmin * 100}%`, top: `${d.box.ymin * 100}%`, width: `${(d.box.xmax - d.box.xmin) * 100}%`, height: `${(d.box.ymax - d.box.ymin) * 100}%` }}>
-                    <span className="absolute -top-5 left-0 px-1 font-mono text-[10px] whitespace-nowrap text-white" style={{ background: color(d.label) }}>
+                    <span className="absolute -top-5 left-0 px-1 font-mono text-[11px] whitespace-nowrap text-white" style={{ background: color(d.label) }}>
                       {d.label} {Math.round(d.score * 100)}%
                     </span>
                   </div>

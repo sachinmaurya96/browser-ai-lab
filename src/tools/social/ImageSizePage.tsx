@@ -100,7 +100,7 @@ export default function ImageSizePage() {
                   <input type="checkbox" aria-label={`Export ${p.label}`} checked={picked.has(p.id)} onChange={() => setPicked((s) => { const n = new Set(s); if (n.has(p.id)) n.delete(p.id); else n.add(p.id); return n })} className="accent-[var(--accent)]" />
                   <button type="button" onClick={() => setPreset(p)} className="min-w-0 flex-1 text-left">
                     <span className="block truncate font-medium">{p.label}</span>
-                    <span className="font-mono text-[10px] text-ink-3">{p.w}×{p.h}</span>
+                    <span className="font-mono text-[11px] text-ink-3">{p.w}×{p.h}</span>
                   </button>
                 </li>
               ))}

@@ -157,7 +157,7 @@ export default function KokoroPage() {
                   <span className={cx('grid size-8 shrink-0 place-items-center rounded-full text-xs font-semibold', voice === v.id ? 'bg-accent text-accent-ink' : v.engine === 'piper' ? 'bg-sea-soft text-sea' : 'bg-paper-2')}>{v.name[0]}</span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium">{v.name}</span>
-                    <span className={cx('block truncate font-mono text-[10px]', voice === v.id ? 'text-paper/60' : 'text-ink-3')}>
+                    <span className={cx('block truncate font-mono text-[11px]', voice === v.id ? 'text-paper/60' : 'text-ink-3')}>
                       {v.language === 'en-gb' ? 'UK' : v.language === 'en-us' ? 'US' : 'हिंदी'} · {v.gender}{v.badge ? ` · ${v.badge}` : ''}
                     </span>
                   </span>

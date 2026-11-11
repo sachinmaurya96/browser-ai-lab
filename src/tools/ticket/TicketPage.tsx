@@ -81,7 +81,7 @@ export default function TicketPage() {
       <ToolIntro slug="ticket" />
       <ModelCard
         model={model}
-        info={{ name: 'onnx-community/Qwen2.5-0.5B-Instruct', href: 'https://huggingface.co/onnx-community/Qwen2.5-0.5B-Instruct', size: '~480 MB', task: 'text generation' }}
+        info={{ name: 'onnx-community/Qwen2.5-0.5B-Instruct', href: 'https://huggingface.co/onnx-community/Qwen2.5-0.5B-Instruct', size: '~760 MB', task: 'text generation' }}
         autoNote="Loads automatically on your first draft. "
       />
 

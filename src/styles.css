@@ -9,14 +9,15 @@
   --card: #fffdf9;
   --ink: #1b1a17;
   --ink-2: #57524a;
-  --ink-3: #8b857b;
+  --ink-3: #6a645a; /* ≥4.5:1 (WCAG AA) on paper, card and tinted fills */
   --rule: #d9d1c3;
-  --accent: #e8553a;
+  /* Accent/sea/sun are tuned for ≥4.5:1 as text on paper, card and their soft fills. */
+  --accent: #b9381a;
   --accent-ink: #ffffff;
   --accent-soft: #fbe3dc;
-  --sea: #1f7a6d;
+  --sea: #1a6b5f;
   --sea-soft: #d8eee9;
-  --sun: #c98a12;
+  --sun: #8a5d00;
   --sun-soft: #f6ead0;
   --danger: #b4321f;
   --checker-a: #ffffff;
@@ -31,7 +32,7 @@
     --card: #1b1a17;
     --ink: #f1ece3;
     --ink-2: #bdb5a8;
-    --ink-3: #847d72;
+    --ink-3: #9e968a;
     --rule: #34302a;
     --accent: #ff6b4d;
     --accent-ink: #1b1a17;
@@ -53,7 +54,7 @@
   --card: #1b1a17;
   --ink: #f1ece3;
   --ink-2: #bdb5a8;
-  --ink-3: #847d72;
+  --ink-3: #9e968a;
   --rule: #34302a;
   --accent: #ff6b4d;
   --accent-ink: #1b1a17;
@@ -199,4 +200,10 @@ body {
   background: var(--paper-2);
   padding: 0.1em 0.35em;
   border-radius: 4px;
+}
+
+/* Native checkboxes are 13px by default: too small to tap comfortably. */
+input[type='checkbox'] {
+  width: 1.125rem;
+  height: 1.125rem;
 }

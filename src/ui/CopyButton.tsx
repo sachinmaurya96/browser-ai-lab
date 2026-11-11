@@ -11,6 +11,7 @@ export function CopyButton({ text, label = 'Copy', disabled }: { text: string; l
       size="sm"
       tone="ghost"
       disabled={disabled || !text}
+      aria-label={label ? undefined : done ? 'Copied' : 'Copy'}
       onClick={async () => {
         try {
           await navigator.clipboard.writeText(text)

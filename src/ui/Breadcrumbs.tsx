@@ -12,9 +12,9 @@ export function Breadcrumbs({ items }: { items: { name: string; path: string }[]
             <li key={it.path} className="flex items-center gap-1">
               {i > 0 && <ChevronRight size={12} aria-hidden />}
               {i === items.length - 1 ? (
-                <span aria-current="page" className="text-ink-2">{it.name}</span>
+                <span aria-current="page" className="inline-block py-1 text-ink-2">{it.name}</span>
               ) : (
-                <Link href={it.path} className="hover:text-accent">{it.name}</Link>
+                <Link href={it.path} className="inline-block py-1 hover:text-accent">{it.name}</Link>
               )}
             </li>
           ))}

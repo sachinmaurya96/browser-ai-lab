@@ -166,7 +166,7 @@ export default function TimePage() {
         </Panel>
         <Panel kicker="Cron" title="Explain a cron expression">
           <input aria-label="Cron expression" spellCheck={false} className={cx(inputClass, 'font-mono text-lg')} value={cron} onChange={(e) => setCron(e.target.value)} />
-          <div className="mt-1 grid grid-cols-5 gap-1 text-center font-mono text-[10px] text-ink-3">{['minute', 'hour', 'day', 'month', 'weekday'].map((f) => <span key={f}>{f}</span>)}</div>
+          <div className="mt-1 grid grid-cols-5 gap-1 text-center font-mono text-[11px] text-ink-3">{['minute', 'hour', 'day', 'month', 'weekday'].map((f) => <span key={f}>{f}</span>)}</div>
           <div className="mt-3 flex flex-wrap gap-2">
             {['*/5 * * * *', '0 9 * * 1-5', '30 2 * * 0', '0 0 1 * *', '@hourly'].map((c) => <Chip key={c} onClick={() => setCron(c)}>{c}</Chip>)}
           </div>

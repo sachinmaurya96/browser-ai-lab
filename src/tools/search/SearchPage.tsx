@@ -316,14 +316,14 @@ function Collection({
       )}
       <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
         {docs.map((d) => (
-          <li key={d.id} className="group flex items-start gap-2 rounded-lg border border-rule p-3 text-sm">
+          <li key={d.id} className="group flex min-w-0 items-start gap-2 rounded-lg border border-rule p-3 text-sm">
             <div className="min-w-0 flex-1">
               <p className="font-mono text-[11px] text-ink-3">
                 {d.id} · {d.area} {d.mine && <span className="text-accent">· yours</span>}
               </p>
               <p className="truncate font-medium">{d.title}</p>
             </div>
-            <button type="button" aria-label={`Remove ${d.id}`} onClick={() => onRemove(d.id)} className="text-ink-3 opacity-60 hover:text-danger group-hover:opacity-100">
+            <button type="button" aria-label={`Remove ${d.id}`} onClick={() => onRemove(d.id)} className="-m-1.5 grid size-7 shrink-0 place-items-center rounded text-ink-3 hover:text-danger">
               <Trash2 size={14} />
             </button>
           </li>

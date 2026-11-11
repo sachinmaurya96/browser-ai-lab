@@ -58,12 +58,12 @@ export default function DocQaPage() {
         <Panel kicker="Document" title="Paste text or open a .txt / .md file" actions={<Button size="sm" tone="ghost" onClick={() => fileRef.current?.click()}><FileUp size={15} /> Open</Button>}>
           <textarea aria-label="Document" rows={16} value={doc} onChange={(e) => setDoc(e.target.value)} placeholder="Contracts, manuals, policies, meeting notes, terms of service…" className={cx(inputClass, 'text-sm leading-relaxed')} />
           <p className="mt-1 font-mono text-[11px] text-ink-3">{doc.split(/\s+/).filter(Boolean).length} words</p>
-          <input ref={fileRef} type="file" accept=".txt,.md,.csv,.json,.html,text/*" className="sr-only" onChange={async (e) => { const f = e.target.files?.[0]; if (f) setDoc(await f.text()); e.target.value = '' }} />
+          <input ref={fileRef} type="file" aria-label="Open a text file" accept=".txt,.md,.csv,.json,.html,text/*" className="sr-only" onChange={async (e) => { const f = e.target.files?.[0]; if (f) setDoc(await f.text()); e.target.value = '' }} />
         </Panel>
         <Panel kicker="Ask" title="Answers are quoted straight from the document">
           <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); if (q.trim() && doc.trim()) void ask() }}>
             <input aria-label="Question" className={inputClass} value={q} onChange={(e) => setQ(e.target.value)} placeholder="e.g. What is the notice period?" />
-            <Button tone="primary" type="submit" disabled={!q.trim() || !doc.trim() || task.busy}><MessageCircleQuestion size={16} /></Button>
+            <Button tone="primary" type="submit" aria-label="Ask" disabled={!q.trim() || !doc.trim() || task.busy}><MessageCircleQuestion size={16} /></Button>
           </form>
           {task.busy && <p className="mt-3 font-mono text-xs text-ink-3">Searching the document…</p>}
           <ul className="mt-5 space-y-4">

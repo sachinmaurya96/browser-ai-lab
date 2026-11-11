@@ -71,6 +71,7 @@ export function DropZone({
       <input
         ref={inputRef}
         type="file"
+        aria-label="Choose an image"
         accept={ACCEPTED_IMAGES.join(',')}
         className="sr-only"
         tabIndex={-1}

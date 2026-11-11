@@ -56,7 +56,7 @@ export function Panel({
   className?: string
 }) {
   return (
-    <section className={cx('rounded-xl border border-rule bg-card', className)}>
+    <section className={cx('min-w-0 rounded-xl border border-rule bg-card', className)}>
       {(title || actions) && (
         <header className="flex flex-wrap items-center justify-between gap-3 border-b border-rule px-5 py-3">
           <div className="min-w-0">
