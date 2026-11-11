@@ -38,7 +38,7 @@ function useTheme() {
 
 function Logo() {
   return (
-    <Link href="/" className="flex items-center gap-2.5" aria-label="Browser AI Lab home">
+    <Link href="/" className="flex items-center gap-2.5">
       <svg viewBox="0 0 32 32" className="size-8 shrink-0" aria-hidden>
         <rect width="32" height="32" rx="7" fill="var(--ink)" />
         <circle cx="16" cy="16" r="7" fill="none" stroke="var(--accent)" strokeWidth="3" />
@@ -46,7 +46,7 @@ function Logo() {
       </svg>
       <span className="leading-none">
         <span className="block font-display text-[22px] italic">Browser AI Lab</span>
-        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-3">on-device · no server</span>
+        <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink-3">on-device · no server</span>
       </span>
     </Link>
   )
@@ -106,7 +106,7 @@ export function Shell({ children }: { children: ReactNode }) {
         <Logo />
         <nav aria-label="Tools" className="-mx-2 mt-8 flex-1 space-y-5 overflow-y-auto px-2 pb-4">
           <div>
-            <p className="mb-1.5 flex items-center gap-1.5 px-3 font-mono text-[10px] uppercase tracking-[0.16em] text-sun">
+            <p className="mb-1.5 flex items-center gap-1.5 px-3 font-mono text-[11px] uppercase tracking-[0.16em] text-sun">
               <Star size={11} fill="currentColor" /> Favorites
             </p>
             {favTools.length ? (
@@ -117,7 +117,7 @@ export function Shell({ children }: { children: ReactNode }) {
           </div>
           {CATEGORIES.map((c) => (
             <div key={c.id}>
-              <Link href={`/category/${c.slug}`} className="mb-1.5 block px-3 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3 hover:text-accent">
+              <Link href={`/category/${c.slug}`} className="mb-1.5 block px-3 font-mono text-[11px] uppercase tracking-[0.16em] text-ink-3 hover:text-accent">
                 {c.id}
               </Link>
               {TOOLS.filter((t) => t.category === c.id).map((t) => (

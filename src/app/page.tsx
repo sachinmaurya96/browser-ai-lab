@@ -57,7 +57,7 @@ export default function Home() {
           <li className="flex items-center gap-2"><Lock size={16} className="text-accent" aria-hidden /> Data stays on device</li>
           <li className="flex items-center gap-2"><Zap size={16} className="text-accent" aria-hidden /> WebGPU with CPU fallback</li>
         </ul>
-        <div className="mt-6 flex flex-wrap gap-3 text-sm">
+        <div className="mt-6 flex flex-wrap gap-x-3 gap-y-1 text-sm [&>a]:py-1">
           <Link href="/about" className="underline decoration-rule underline-offset-4 hover:text-accent">About the maker</Link>
           <Link href="/guides" className="underline decoration-rule underline-offset-4 hover:text-accent">Guides</Link>
           <a href={LINKS.coffee} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 font-medium text-accent hover:underline"><Coffee size={15} aria-hidden /> Support this project</a>

@@ -42,7 +42,7 @@ export default async function CategoryPage({ params }: Props) {
         <dl className="mt-4 space-y-4">
           {tools.map((t) => (
             <div key={t.slug}>
-              <dt className="font-semibold"><Link href={toolPath(t.slug)} className="hover:text-accent">{TOOL_CONTENT[t.slug].h1}</Link></dt>
+              <dt className="font-semibold"><Link href={toolPath(t.slug)} className="inline-block py-0.5 hover:text-accent">{TOOL_CONTENT[t.slug].h1}</Link></dt>
               <dd className="text-[15px] text-ink-2">{TOOL_CONTENT[t.slug].description}</dd>
             </div>
           ))}

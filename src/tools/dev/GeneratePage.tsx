@@ -96,7 +96,7 @@ export default function GeneratePage() {
             {items.map((x, i) => (
               <li key={i} className="group flex items-center gap-2 rounded-md border border-rule px-3 py-1.5">
                 <code className={cx('flex-1 font-mono text-sm break-all')}>{x}</code>
-                <span className="opacity-60 group-hover:opacity-100"><CopyButton text={x} label="" /></span>
+                <CopyButton text={x} label="" />
               </li>
             ))}
           </ul>

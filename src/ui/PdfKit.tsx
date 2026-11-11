@@ -49,7 +49,7 @@ export function FileDrop({
         <span className="font-medium">{label}</span>
         <span className="font-mono text-[11px] text-ink-3">processed in your browser · never uploaded</span>
       </button>
-      <input ref={ref} type="file" accept={accept} multiple={multiple} className="sr-only" tabIndex={-1} onChange={(e) => { onFiles([...(e.target.files ?? [])]); e.target.value = '' }} />
+      <input ref={ref} type="file" aria-label="Choose files" accept={accept} multiple={multiple} className="sr-only" tabIndex={-1} onChange={(e) => { onFiles([...(e.target.files ?? [])]); e.target.value = '' }} />
     </>
   )
 }

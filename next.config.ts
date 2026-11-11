@@ -1,7 +1,7 @@
 import type { NextConfig } from 'next'
 import { LEGACY_SLUGS } from './src/tools/slugs'
 
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://browserailab.in').replace(/\/+$/, '')
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.browserailab.com').replace(/\/+$/, '')
 const CANONICAL_HOST = new URL(SITE_URL).host
 
 /**
@@ -10,7 +10,7 @@ const CANONICAL_HOST = new URL(SITE_URL).host
  * *.vercel.app site would redirect visitors to a domain that doesn't resolve yet.
  * Fragments (/#/cutout) survive the redirect; the layout script then maps them.
  */
-const LEGACY_HOSTS = (process.env.LEGACY_HOSTS || 'browser-ai-lab.vercel.app,www.browserailab.in')
+const LEGACY_HOSTS = (process.env.LEGACY_HOSTS || 'browser-ai-lab.vercel.app,browserailab.com')
   .split(',')
   .map((h) => h.trim())
   .filter((h) => h && h !== CANONICAL_HOST)

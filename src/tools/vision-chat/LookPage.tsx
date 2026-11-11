@@ -180,7 +180,7 @@ export default function LookPage() {
                       <ImageUp size={16} /> Upload photo
                     </Button>
                   </div>
-                  <p className="font-mono text-[11px] text-paper/50">Frames stay in this tab. Nothing is recorded or sent.</p>
+                  <p className="font-mono text-[11px] text-paper/80">Frames stay in this tab. Nothing is recorded or sent.</p>
                 </div>
               </div>
             )}
@@ -225,7 +225,7 @@ export default function LookPage() {
             )}
           </div>
           {narrate && live && <p className="mt-2 text-xs text-ink-3">Narration pauses while a frame is frozen or a question is being answered.</p>}
-          <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" tabIndex={-1} onChange={(e) => { void onUpload(e.target.files?.[0]); e.target.value = '' }} />
+          <input ref={fileRef} type="file" aria-label="Upload an image" accept="image/png,image/jpeg,image/webp" className="sr-only" tabIndex={-1} onChange={(e) => { void onUpload(e.target.files?.[0]); e.target.value = '' }} />
         </Panel>
 
         <Panel

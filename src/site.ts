@@ -5,7 +5,7 @@
  */
 
 /** Canonical origin, no trailing slash. Used for canonicals, sitemap, JSON-LD and OG URLs. */
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://browserailab.in').replace(/\/+$/, '')
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.browserailab.com').replace(/\/+$/, '')
 
 export const SITE_NAME = 'Browser AI Lab'
 export const SITE_TAGLINE = 'Free AI tools that run in your browser'

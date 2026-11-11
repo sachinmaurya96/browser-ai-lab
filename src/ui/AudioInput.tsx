@@ -23,7 +23,7 @@ export function AudioInput({ onAudio, disabled }: { onAudio: (blob: Blob, name: 
         )}
         <p className="font-mono text-[11px] text-ink-3">MP3 · WAV · M4A · OGG · MP4/WebM video — processed locally</p>
       </div>
-      <input ref={fileRef} type="file" accept="audio/*,video/*" className="sr-only" tabIndex={-1} onChange={(e) => { const f = e.target.files?.[0]; if (f) onAudio(f, f.name); e.target.value = '' }} />
+      <input ref={fileRef} type="file" aria-label="Choose an audio or video file" accept="audio/*,video/*" className="sr-only" tabIndex={-1} onChange={(e) => { const f = e.target.files?.[0]; if (f) onAudio(f, f.name); e.target.value = '' }} />
       {rec.error && <Notice tone="error">{rec.error}</Notice>}
     </div>
   )

@@ -23,13 +23,13 @@ export function ModelCard({ model, info, autoNote }: { model: Model; info: Model
   return (
     <div className="overflow-hidden rounded-xl border border-ink/80 bg-card">
       <div className="flex flex-wrap items-center gap-x-6 gap-y-3 px-5 py-4">
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 basis-full sm:basis-0">
           <Kicker>Model · {info.task}</Kicker>
           <a
             href={info.href}
             target="_blank"
             rel="noreferrer"
-            className="block truncate font-mono text-sm font-medium underline decoration-rule underline-offset-4 hover:decoration-accent"
+            className="block truncate py-0.5 font-mono text-sm font-medium underline decoration-rule underline-offset-4 hover:decoration-accent"
           >
             {info.name}
           </a>

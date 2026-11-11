@@ -64,8 +64,8 @@ export function Compare({
           <MoveHorizontal size={16} />
         </button>
       </div>
-      <span className="absolute top-2 left-2 rounded bg-ink/80 px-1.5 py-0.5 font-mono text-[10px] uppercase text-paper">Before</span>
-      <span className="absolute top-2 right-2 rounded bg-accent px-1.5 py-0.5 font-mono text-[10px] uppercase text-accent-ink">After</span>
+      <span className="absolute top-2 left-2 rounded bg-ink/80 px-1.5 py-0.5 font-mono text-[11px] uppercase text-paper">Before</span>
+      <span className="absolute top-2 right-2 rounded bg-accent px-1.5 py-0.5 font-mono text-[11px] uppercase text-accent-ink">After</span>
     </div>
   )
 }
