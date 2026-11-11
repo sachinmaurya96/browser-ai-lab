@@ -9,17 +9,20 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@breezystack/lamejs": "^1.2.7",
     "@huggingface/transformers": "4.3.1",
     "@mintplex-labs/piper-tts-web": "^1.0.5",
     "jszip": "^3.10.2",
     "kokoro-js": "^1.2.1",
     "lucide-react": "1.57.0",
+    "onnxruntime-web": "^1.30.0",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^6.4.299",
     "qrcode": "^1.5.4",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "react-router-dom": "7.18.4",
+    "wavesurfer.js": "^8.0.5",
     "zod": "4.6.7"
   },
   "devDependencies": {
