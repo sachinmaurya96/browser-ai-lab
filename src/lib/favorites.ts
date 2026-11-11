@@ -7,6 +7,8 @@ import { useCallback, useSyncExternalStore } from 'react'
 const KEY = 'lab-favorites'
 const listeners = new Set<() => void>()
 let cache: string[] | null = null
+/** Server/hydration snapshot. Must be the same array every call, or React loops. */
+const NONE: string[] = []
 
 function read(): string[] {
   if (cache) return cache
@@ -46,7 +48,7 @@ function subscribe(listener: () => void) {
 }
 
 export function useFavorites() {
-  const favorites = useSyncExternalStore(subscribe, read, () => [])
+  const favorites = useSyncExternalStore(subscribe, read, () => NONE)
   const toggle = useCallback((slug: string) => {
     const cur = read()
     write(cur.includes(slug) ? cur.filter((s) => s !== slug) : [...cur, slug])

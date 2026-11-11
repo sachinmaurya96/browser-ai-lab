@@ -1,34 +1,44 @@
-import { Suspense, useEffect, useState } from 'react'
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
+'use client'
+
+import { useEffect, useState, type ReactNode } from 'react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { Coffee, Moon, Star, Sun, WifiOff } from 'lucide-react'
 import { useFavorites } from '../lib/favorites'
-import { LINKS } from './Home'
+import { LINKS } from '../site'
 import { CATEGORIES, TOOLS, type Tool } from '../tools'
+import { toolPath } from '../tools/slugs'
 import { cx } from './kit'
 
 type Theme = 'light' | 'dark'
 
+/**
+ * The inline script in the root layout applies the saved theme before first
+ * paint; this hook only reads it after hydration, so server and client markup
+ * always match.
+ */
 function useTheme() {
-  const initial = (): Theme => {
-    const set = document.documentElement.dataset.theme
-    if (set === 'light' || set === 'dark') return set
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-  }
-  const [theme, setTheme] = useState<Theme>(initial)
+  const [theme, setTheme] = useState<Theme | null>(null)
   useEffect(() => {
-    document.documentElement.dataset.theme = theme
+    const set = document.documentElement.dataset.theme
+    setTheme(set === 'light' || set === 'dark' ? set : window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+  }, [])
+  const toggle = () => {
+    const next: Theme = theme === 'dark' ? 'light' : 'dark'
+    document.documentElement.dataset.theme = next
     try {
-      localStorage.setItem('lab-theme', theme)
+      localStorage.setItem('lab-theme', next)
     } catch {
       /* storage unavailable */
     }
-  }, [theme])
-  return [theme, () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))] as const
+    setTheme(next)
+  }
+  return [theme, toggle] as const
 }
 
 function Logo() {
   return (
-    <NavLink to="/" className="flex items-center gap-2.5">
+    <Link href="/" className="flex items-center gap-2.5" aria-label="Browser AI Lab home">
       <svg viewBox="0 0 32 32" className="size-8 shrink-0" aria-hidden>
         <rect width="32" height="32" rx="7" fill="var(--ink)" />
         <circle cx="16" cy="16" r="7" fill="none" stroke="var(--accent)" strokeWidth="3" />
@@ -38,27 +48,22 @@ function Logo() {
         <span className="block font-display text-[22px] italic">Browser AI Lab</span>
         <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-3">on-device · no server</span>
       </span>
-    </NavLink>
+    </Link>
   )
 }
 
 /** Sidebar link with a hover star to add/remove the tool from favourites. */
-function NavItem({ tool, fav, onToggle }: { tool: Tool; fav: boolean; onToggle: () => void }) {
+function NavItem({ tool, fav, active, onToggle }: { tool: Tool; fav: boolean; active: boolean; onToggle: () => void }) {
   return (
     <div className="group relative">
-      <NavLink
-        to={`/${tool.slug}`}
-        className={({ isActive }) =>
-          cx('flex items-center gap-2.5 rounded-md py-1.5 pr-8 pl-3 text-sm transition-colors', isActive ? 'bg-ink text-paper' : 'text-ink-2 hover:bg-card hover:text-ink')
-        }
+      <Link
+        href={toolPath(tool.slug)}
+        aria-current={active ? 'page' : undefined}
+        className={cx('flex items-center gap-2.5 rounded-md py-1.5 pr-8 pl-3 text-sm transition-colors', active ? 'bg-ink text-paper' : 'text-ink-2 hover:bg-card hover:text-ink')}
       >
-        {({ isActive }) => (
-          <>
-            <tool.icon size={15} className={isActive ? 'text-accent' : undefined} />
-            <span className="truncate font-medium">{tool.name}</span>
-          </>
-        )}
-      </NavLink>
+        <tool.icon size={15} className={active ? 'text-accent' : undefined} aria-hidden />
+        <span className="truncate font-medium">{tool.name}</span>
+      </Link>
       <button
         type="button"
         onClick={onToggle}
@@ -76,21 +81,18 @@ function NavItem({ tool, fav, onToggle }: { tool: Tool; fav: boolean; onToggle: 
   )
 }
 
-export function Shell() {
+export function Shell({ children }: { children: ReactNode }) {
   const [theme, toggleTheme] = useTheme()
-  const { pathname } = useLocation()
+  const pathname = usePathname()
   const { favorites, toggle, isFavorite } = useFavorites()
   const favTools = favorites.map((s) => TOOLS.find((t) => t.slug === s)).filter((t): t is Tool => !!t)
-
-  useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [pathname])
+  const isActive = (t: Tool) => pathname === toolPath(t.slug)
 
   const themeButton = (
     <button
       type="button"
       onClick={toggleTheme}
-      aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
+      aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
       className="grid size-9 place-items-center rounded-md border border-rule text-ink-2 hover:border-ink hover:text-ink"
     >
       {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
@@ -108,31 +110,33 @@ export function Shell() {
               <Star size={11} fill="currentColor" /> Favorites
             </p>
             {favTools.length ? (
-              favTools.map((t) => <NavItem key={t.slug} tool={t} fav onToggle={() => toggle(t.slug)} />)
+              favTools.map((t) => <NavItem key={t.slug} tool={t} fav active={isActive(t)} onToggle={() => toggle(t.slug)} />)
             ) : (
               <p className="px-3 text-xs leading-relaxed text-ink-3">Hover any tool and click ☆ to pin it here.</p>
             )}
           </div>
           {CATEGORIES.map((c) => (
             <div key={c.id}>
-              <p className="mb-1.5 px-3 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3">{c.id}</p>
+              <Link href={`/category/${c.slug}`} className="mb-1.5 block px-3 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-3 hover:text-accent">
+                {c.id}
+              </Link>
               {TOOLS.filter((t) => t.category === c.id).map((t) => (
-                <NavItem key={t.slug} tool={t} fav={isFavorite(t.slug)} onToggle={() => toggle(t.slug)} />
+                <NavItem key={t.slug} tool={t} fav={isFavorite(t.slug)} active={isActive(t)} onToggle={() => toggle(t.slug)} />
               ))}
             </div>
           ))}
         </nav>
         <div className="space-y-4">
           <p className="flex items-start gap-2 text-xs leading-relaxed text-ink-3">
-            <WifiOff size={14} className="mt-0.5 shrink-0" />
+            <WifiOff size={14} className="mt-0.5 shrink-0" aria-hidden />
             Free forever. Models download once, then run offline in this tab.
           </p>
           <a href={LINKS.coffee} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 rounded-md bg-accent px-3 py-2 text-sm font-semibold text-accent-ink hover:opacity-90">
-            <Coffee size={15} /> Buy me a coffee
+            <Coffee size={15} aria-hidden /> Buy me a coffee
           </a>
           <div className="flex items-center justify-between">
             {themeButton}
-            <a href={LINKS.linkedin} target="_blank" rel="noreferrer" className="text-xs text-ink-3 hover:text-accent">by Sachin Maurya</a>
+            <Link href="/about" className="text-xs text-ink-3 hover:text-accent">by Sachin Maurya</Link>
           </div>
         </div>
       </aside>
@@ -143,61 +147,34 @@ export function Shell() {
           <Logo />
           {themeButton}
         </div>
-        <nav aria-label="Tools" className="flex gap-1.5 overflow-x-auto px-4 pb-3">
+        <nav aria-label="Tools (mobile)" className="flex gap-1.5 overflow-x-auto px-4 pb-3">
           {[...favTools, ...TOOLS.filter((t) => !isFavorite(t.slug))].map((t) => (
-            <NavLink
+            <Link
               key={t.slug}
-              to={`/${t.slug}`}
-              className={({ isActive }) =>
-                cx(
-                  'flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm',
-                  isActive ? 'border-ink bg-ink text-paper' : 'border-rule text-ink-2',
-                )
-              }
+              href={toolPath(t.slug)}
+              aria-current={isActive(t) ? 'page' : undefined}
+              className={cx('flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm', isActive(t) ? 'border-ink bg-ink text-paper' : 'border-rule text-ink-2')}
             >
-              {isFavorite(t.slug) ? <Star size={13} className="text-sun" fill="currentColor" /> : <t.icon size={14} />}
+              {isFavorite(t.slug) ? <Star size={13} className="text-sun" fill="currentColor" aria-hidden /> : <t.icon size={14} aria-hidden />}
               {t.name}
-            </NavLink>
+            </Link>
           ))}
         </nav>
       </header>
 
-      <main className="min-w-0 px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
-        <div className="mx-auto max-w-6xl">
-          <Suspense fallback={<p className="font-mono text-sm text-ink-3">Loading instrument…</p>}>
-            <Outlet />
-          </Suspense>
-        </div>
+      <main id="main" className="min-w-0 px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
+        <div className="mx-auto max-w-6xl">{children}</div>
       </main>
     </div>
   )
 }
 
-export function ToolIntro({ slug, children }: { slug: string; children?: React.ReactNode }) {
-  const index = TOOLS.findIndex((t) => t.slug === slug)
-  const tool = TOOLS[index]
-  const { isFavorite, toggle } = useFavorites()
-  const fav = isFavorite(slug)
-  return (
-    <header className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-rule pb-6">
-      <div className="max-w-2xl">
-        <p className="font-mono text-xs uppercase tracking-[0.16em] text-accent">
-          {tool.category} · No. {String(index + 1).padStart(2, '0')} — {tool.tagline}
-        </p>
-        <h1 className="mt-2 font-display text-5xl leading-none sm:text-6xl">{tool.name}</h1>
-        <p className="mt-3 text-lg text-ink-2">{tool.blurb}</p>
-      </div>
-      <div className="flex items-center gap-2">
-        {children}
-        <button
-          type="button"
-          onClick={() => toggle(slug)}
-          aria-pressed={fav}
-          className={cx('inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm transition-colors', fav ? 'border-sun bg-sun-soft text-sun' : 'border-rule text-ink-2 hover:border-ink hover:text-ink')}
-        >
-          <Star size={15} fill={fav ? 'currentColor' : 'none'} /> {fav ? 'Favorited' : 'Favorite'}
-        </button>
-      </div>
-    </header>
-  )
+/**
+ * Tool pages used to render their own title block here. The server-rendered
+ * page header (app/tools/[slug]) now owns the H1, so this only shows any
+ * extra actions a tool passes in (e.g. "New song").
+ */
+export function ToolIntro({ children }: { slug: string; children?: ReactNode }) {
+  if (!children) return null
+  return <div className="flex flex-wrap justify-end gap-2">{children}</div>
 }
