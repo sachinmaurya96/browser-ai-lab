@@ -1,13 +1,18 @@
 /** PDF helpers: pdf.js for reading/rendering, pdf-lib for writing. */
 import * as pdfjs from 'pdfjs-dist'
-import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import { saveBlob } from './images'
 
-pdfjs.GlobalWorkerOptions.workerSrc = workerUrl
+// One shared pdf.js worker, started the first time a PDF is opened.
+function ensureWorker() {
+  if (!pdfjs.GlobalWorkerOptions.workerPort) {
+    pdfjs.GlobalWorkerOptions.workerPort = new Worker(new URL('./pdf.worker.ts', import.meta.url), { type: 'module' })
+  }
+}
 
 export type PdfDoc = pdfjs.PDFDocumentProxy
 
 export async function openPdf(file: Blob | ArrayBuffer): Promise<PdfDoc> {
+  ensureWorker()
   const data = file instanceof Blob ? await file.arrayBuffer() : file
   // pdf.js takes ownership of the buffer, so hand it a copy.
   return pdfjs.getDocument({ data: new Uint8Array(data.slice(0)) }).promise

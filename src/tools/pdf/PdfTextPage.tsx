@@ -5,7 +5,7 @@ import { saveBlob } from '../../lib/images'
 import { useTask } from '../../lib/hooks'
 import { FileBadge, FileDrop, PlainToolPage, usePdf } from '../../ui/PdfKit'
 import { Button, CopyButton, Notice, Panel } from '../../ui/kit'
-import { Link } from 'react-router-dom'
+import Link from 'next/link'
 
 export default function PdfTextPage() {
   const pdf = usePdf()
@@ -31,7 +31,7 @@ export default function PdfTextPage() {
       ) : (
         <>
           <FileBadge file={pdf.file} pages={pdf.doc.numPages} onClear={pdf.clear} />
-          {scanned && <Notice tone="warn">Almost no text found. This looks like a scanned PDF. Use <Link to="/pdf-ocr" className="underline">Scan OCR</Link> to read it with AI.</Notice>}
+          {scanned && <Notice tone="warn">Almost no text found. This looks like a scanned PDF. Use <Link href="/tools/ocr-scanned-pdf" className="underline">Scan OCR</Link> to read it with AI.</Notice>}
           <Panel
             kicker="Text"
             title={task.busy ? `Reading page ${progress}…` : `${words.toLocaleString()} words`}

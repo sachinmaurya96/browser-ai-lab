@@ -1,55 +1,75 @@
 # Browser AI Lab
 
-35 free AI tools that run entirely in your browser. No backend, no API keys, no sign-up, and no uploads. Models download once from the Hugging Face Hub, get cached, and run locally via [Transformers.js](https://huggingface.co/docs/transformers.js) on WebGPU, falling back to WebAssembly.
+50 free tools that run entirely in your browser: AI for images, audio, text and PDFs, plus instant developer and social-media utilities. There is no inference backend, no API keys and no sign-up, and nothing is uploaded. Models download once from the Hugging Face Hub, are cached, and run locally on WebGPU, falling back to WebAssembly.
+
+Live at **https://browserailab.in**. Built with Next.js (App Router) and deployed on Vercel.
 
 | Category | Tools |
 |---|---|
-| **PDF** | Merge · Split · Organize (reorder/rotate/delete) · Compress · Images → PDF · PDF → Images · PDF → Text · Watermark & page numbers · Ask a PDF (AI Q&A) · Scan OCR (AI, Florence-2) |
-| **Image** | Cutout (background remover, RMBG-1.4) · Enhance (2× upscaler, Swin2SR) · Text Scanner (OCR, Florence-2) · Describe (alt text, Florence-2) · Object Finder (DETR) · Photo Tagger (CLIP zero-shot) · Depth Map (Depth Anything V2) · Look & Ask (webcam VQA, LFM2.5-VL) |
-| **Audio** | Voice Studio (Kokoro-82M, 50+ voices, Apache-2.0) · Transcribe (Whisper, SRT/VTT export) · Sound ID (AST AudioSet) |
-| **Text** | Translate (NLLB-200) · Summarize (DistilBART) · Ask a Doc (extractive QA) · Emotion Radar (GoEmotions) · Redactor (BERT NER + patterns) |
-| **Assistants** | Private Chat (Qwen2.5-1.5B) · Rewriter (Qwen2.5-0.5B) |
-| **Developer** | Code Helper (Qwen2.5-Coder) · Triage (complaint → ticket) · Recall (semantic vs BM25 search) · Duplicate Finder (MiniLM) · Smart Sorter (zero-shot) · Moderator (Toxic-BERT) |
+| **Social** | Bold/italic text styler · Social image resizer |
+| **PDF** | Merge · Split · Organize · Compress · Images → PDF · PDF → Images · PDF → Text · Watermark & page numbers · Ask a PDF (AI Q&A) · Scan OCR (Florence-2) |
+| **Image** | Background remover (RMBG-1.4) · 2× upscaler (Swin2SR) · Image to text (Florence-2) · Alt text (Florence-2) · Object detection (DETR) · Photo tagger (CLIP) · Depth map (Depth Anything V2) · Look & Ask (LFM2.5-VL) |
+| **Audio** | Vocal remover & stem splitter (Demucs v4) · Speech to text + subtitles (Whisper) · AI sound effects (Stable Audio Open Small) · Text to speech (Kokoro-82M, Hindi Piper) · Sound identifier (AST) |
+| **Text** | Translator (NLLB-200) · Summarizer (DistilBART) · Document Q&A · Emotion detector (GoEmotions) · PII redactor (BERT NER) |
+| **Assistants** | Private chat (Llama 3.2 1B) · Rewriter (Qwen2.5-0.5B) |
+| **Developer** | Code helper (Qwen2.5-Coder) · Bug report → ticket · Semantic search · Duplicate finder · Zero-shot classifier · Toxicity checker |
+| **Dev Utilities** | JSON · JWT · Encoder · Hash · UUID/password · Regex · Diff · Timestamp & cron · Colour/contrast · CSV ⇄ JSON · QR codes · Image optimizer |
 
 ## Run it
 
 ```bash
 npm install
-npm run dev       # http://localhost:5173
-npm run build     # type-check + production build into dist/
-npm run preview   # serve the build
+npm run dev        # http://localhost:3000
+npm run build      # production build (type-checks, prerenders every page)
+npm start          # serve the production build
+npm run typecheck  # tsc only
 ```
 
-Chrome or Edge with WebGPU gives the best speed. Other browsers run on the CPU and are slower. The camera needs `localhost` or HTTPS.
+Copy `.env.example` to `.env.local` to override settings locally. Chrome or Edge with WebGPU gives the best speed; other browsers run on the CPU. The camera and microphone need `localhost` or HTTPS.
 
 ## How it's put together
 
 ```
 src/
-  lib/
-    protocol.ts   message types shared by UI and workers
-    engine.ts     worker runtime: lazy boot, run queue, progress, stop
-    useModel.ts   React hook that owns one model worker
-    images.ts     EXIF-aware decode/resize, download helpers
-  ui/             shell (sidebar layout, theme), kit, ModelCard, DropZone, home
-  tools/<tool>/   worker.ts (model) + page + tool-specific logic
-  lib/pipeline.worker.ts  generic worker hosting any Transformers.js pipeline
-  lib/llm.worker.ts       generic streaming chat worker
-  ui/LlmTool.tsx          shared layout for mode-based LLM tools
-  tools.ts        registry: categories, nav, routes, code-splitting
+  app/                    Next.js routes (Server Components unless marked 'use client')
+    page.tsx              home
+    tools/page.tsx        all-tools directory
+    tools/[slug]/         one prerendered page per tool + its OG image
+    category/[slug]/      one page per category
+    guides/               editorial guides (Article JSON-LD)
+    about|contact|privacy|terms/
+    sitemap.ts robots.ts manifest.ts opengraph-image.tsx not-found.tsx error.tsx
+  tools.ts                registry: slugs, names, categories, icons (server-safe)
+  tools/slugs.ts          old HashRouter id → new slug (redirects)
+  tools/loaders.tsx       client-only map of slug → lazily loaded interactive tool
+  tools/<tool>/           each tool's page component, worker and logic
+  content/tools.ts        per-tool SEO copy: title, description, H1, how-to, features, FAQs, related
+  content/guides.tsx      guides
+  seo/                    metadata helper, JSON-LD builders, OG image renderer
+  site.ts                 domain, author, env-driven flags
+  lib/                    worker runtime (engine.ts, useModel.ts), shared workers, helpers
+  ui/                     shell, kit, shared components
 ```
 
-Each tool's worker declares an `Engine` with a `boot()` function and named `ops`. The UI calls `model.run(op, input, onEmit)` and gets back a promise, with streamed tokens or progress arriving through `onEmit`. Runs queue inside the worker, so the UI never sends overlapping requests. Every tool page is lazy-loaded, so a model is only fetched when you open its tool.
+**Rendering.** Every public page is statically prerendered. A tool page's heading, intro, how-to, features, formats, FAQs, related links and JSON-LD are server-rendered HTML. The interactive tool is a client island (`ToolApp`) loaded with `next/dynamic` and `ssr: false`, because tools depend on WebGPU, Web Audio, canvas and workers. Its code, worker and model are only fetched when that page is opened.
 
-Routing uses `HashRouter` with a relative Vite `base`, so `dist/` works from any static host or sub-path without rewrite rules.
+**Workers.** Each tool's worker declares an `Engine` (`boot()` plus named `ops`) and calls `serve()`. The UI calls `model.run(op, input, onEmit)`. Runs queue inside the worker, so the UI never sends overlapping requests. Workers are created with `new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' })`, which Turbopack bundles.
+
+## Adding a tool
+
+1. Build the page component in `src/tools/<tool>/`.
+2. Add an entry to `TOOLS` in `src/tools.ts` (slug, name, category…).
+3. Map the slug to the component in `src/tools/loaders.tsx`.
+4. Write its copy in `src/content/tools.ts`. Keep every claim true to what the tool does.
+
+Routes, the sitemap, OG images, category pages and nav pick it up automatically.
 
 ## Deploy
 
-`.github/workflows/deploy.yml` builds and publishes to GitHub Pages on every push to `main`. To use it, enable Pages with the source set to **GitHub Actions** in the repo settings.
+Vercel builds it with zero configuration. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for environment variables, the custom-domain cut-over, redirects and Search Console setup.
 
 ## Caveats
 
-- AI output is a draft. Review alt text, tickets and VQA answers before relying on them.
-- RMBG-1.4 is licensed for non-commercial use only. For commercial use, swap in a permissively licensed segmentation model in `tools/cutout/worker.ts`.
-- First loads range from about 23 MB (Recall) to around 1 GB (Look & Ask, depending on precision).
-# browser-ai-lab
+- AI output is a draft. Review transcripts, translations, alt text and tickets before relying on them.
+- Some models are licensed for non-commercial use only (RMBG-1.4, NLLB-200, the Hindi Piper voices); each tool page says which.
+- First loads range from about 23 MB (semantic search) to about 2 GB (sound effects).

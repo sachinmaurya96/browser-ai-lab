@@ -1,5 +1,8 @@
-import { useState, type ButtonHTMLAttributes, type ReactNode } from 'react'
-import { Check, Copy } from 'lucide-react'
+import type { ButtonHTMLAttributes, ReactNode } from 'react'
+
+// CopyButton needs state, so it lives in a client module; re-exported here so
+// imports stay unchanged. Everything else in this file is server-safe.
+export { CopyButton } from './CopyButton'
 
 export function cx(...parts: (string | false | null | undefined)[]) {
   return parts.filter(Boolean).join(' ')
@@ -153,28 +156,6 @@ export function Tag({
   )
 }
 
-export function CopyButton({ text, label = 'Copy', disabled }: { text: string; label?: string; disabled?: boolean }) {
-  const [done, setDone] = useState(false)
-  return (
-    <Button
-      size="sm"
-      tone="ghost"
-      disabled={disabled || !text}
-      onClick={async () => {
-        try {
-          await navigator.clipboard.writeText(text)
-          setDone(true)
-          setTimeout(() => setDone(false), 1500)
-        } catch {
-          /* clipboard blocked; the text is still selectable */
-        }
-      }}
-    >
-      {done ? <Check size={15} /> : <Copy size={15} />}
-      {done ? 'Copied' : label}
-    </Button>
-  )
-}
 
 export function Notice({ tone = 'info', children }: { tone?: 'info' | 'warn' | 'error'; children: ReactNode }) {
   const map = {
