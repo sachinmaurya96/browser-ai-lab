@@ -2,7 +2,7 @@ import { lazy, type ComponentType, type LazyExoticComponent } from 'react'
 import {
   AlignLeft, AudioLines, Box, Camera, Code2, Copy, FileText, FolderTree, HeartPulse, Languages, Layers3, Maximize2,
   MessageCircleQuestion, Combine, SplitSquareHorizontal, LayoutGrid, FileImage, Images, FileType, Stamp, Minimize2, FileSearch, FileScan, Mic2, MessagesSquare, Mic, PenLine, ScanLine, ScanText, Scissors, ShieldAlert, ShieldCheck, Tags,
-  Telescope, Type, Crop, Braces, KeyRound, Binary, Fingerprint, Dices, Regex, GitCompare, Clock, Palette, Sheet, QrCode, ImageDown, type LucideIcon,
+  Telescope, AudioWaveform, Type, Crop, Braces, KeyRound, Binary, Fingerprint, Dices, Regex, GitCompare, Clock, Palette, Sheet, QrCode, ImageDown, type LucideIcon,
 } from 'lucide-react'
 
 export type Category = 'Social' | 'PDF' | 'Image' | 'Audio' | 'Text' | 'Assistants' | 'Developer' | 'Dev Utilities'
@@ -60,6 +60,7 @@ export const TOOLS: Tool[] = [
 
   // Audio
   { slug: 'transcribe', name: 'Transcribe', tagline: 'Speech to text + subtitles', category: 'Audio', icon: Mic, stack: ['Whisper'], blurb: 'Turn recordings and videos into text, or SRT/VTT subtitles, in 99 languages.', page: lazy(() => import('./tools/transcribe/TranscribePage')) },
+  { slug: 'sfx', name: 'AI Sound Effects', tagline: 'Text → cartoon SFX', category: 'Audio', icon: AudioWaveform, stack: ['Stable Audio Open Small'], blurb: 'Generate cartoon sound effects and ambience from a text prompt, up to ~12 s of stereo audio.', page: lazy(() => import('./tools/sfx/SfxPage')) },
   { slug: 'voice-studio', name: 'Voice Studio', tagline: 'Natural AI voices (Kokoro)', category: 'Audio', icon: Mic2, stack: ['Kokoro-82M'], blurb: 'Lifelike speech in 50+ US and UK voices. Free for commercial use.', page: lazy(() => import('./tools/kokoro/KokoroPage')) },
   { slug: 'sounds', name: 'Sound ID', tagline: 'What is that sound?', category: 'Audio', icon: AudioLines, stack: ['AST'], blurb: 'Identify animals, instruments, alarms and 500+ other sounds.', page: lazy(() => import('./tools/sounds/SoundsPage')) },
 
