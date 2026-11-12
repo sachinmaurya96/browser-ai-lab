@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
+import { ACTIVE_TOOLS } from '../tools/slugs'
 
 /**
  * Editorial guides. Each one exists because it answers a real question the
@@ -18,9 +19,9 @@ export interface Guide {
   body: ReactNode
 }
 
-const T = ({ to, children }: { to: string; children: ReactNode }) => (
-  <Link href={`/tools/${to}`} className="font-medium text-accent underline underline-offset-4">{children}</Link>
-)
+/** Link to a tool, or plain text if that tool has been retired from the catalog. */
+const T = ({ to, children }: { to: string; children: ReactNode }) =>
+  ACTIVE_TOOLS.has(to) ? <Link href={`/tools/${to}`} className="font-medium text-accent underline underline-offset-4">{children}</Link> : <>{children}</>
 
 export const GUIDES: Guide[] = [
   {
@@ -141,19 +142,19 @@ export const GUIDES: Guide[] = [
     title: 'How Browser AI Lab Runs AI Models on Your Device',
     description: 'What happens when you use an AI tool in Browser AI Lab: model downloads and caching, WebGPU and WebAssembly, Web Workers, and why your files stay private.',
     published: '2026-11-11',
-    modified: '2026-11-11',
-    tools: ['private-ai-chat', 'background-remover'],
+    modified: '2026-11-12',
+    tools: ['background-remover', 'speech-to-text'],
     body: (
       <>
         <p>
-          Browser AI Lab has no AI server. When you remove a background, transcribe a recording or chat with the assistant, the
+          Browser AI Lab has no AI server. When you remove a background, transcribe a recording or translate a document, the
           neural network runs inside your browser tab on your own hardware. Here is what that means in practice.
         </p>
 
         <h2>1. The model is downloaded once, then cached</h2>
         <p>
-          Each AI tool uses an open model published on Hugging Face, from about 25 MB (text embeddings) to about 2 GB (the
-          sound-effects generator). The first time you use a tool, its model files are downloaded and stored in your
+          Each AI tool uses an open model published on Hugging Face, from about 55 MB (the image enhancer) to about 650 MB
+          (the translator). The first time you use a tool, its model files are downloaded and stored in your
           browser&apos;s cache storage. Later visits load them from disk, and most tools then work offline.
         </p>
 
@@ -181,7 +182,7 @@ export const GUIDES: Guide[] = [
         <ul>
           <li><strong>First-run download.</strong> Large models take time to fetch on slow connections.</li>
           <li><strong>Device limits.</strong> Big models need free memory; phones and older laptops may be slow or unable to run the largest ones.</li>
-          <li><strong>Smaller models.</strong> On-device models are compact, so a tool like <T to="private-ai-chat">Private Chat</T> is less capable than large cloud assistants. In return it is free, private and works offline.</li>
+          <li><strong>Smaller models.</strong> On-device models are compact, so a tool like the <T to="text-summarizer">Summarizer</T> is less capable than large cloud AI services. In return it is free, private and works offline.</li>
         </ul>
         <p>
           Want to check for yourself? Open your browser&apos;s network panel and use the{' '}

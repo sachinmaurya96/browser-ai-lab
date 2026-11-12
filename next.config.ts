@@ -41,7 +41,10 @@ const config: NextConfig = {
             permanent: true,
           }))
         : []
-    return [...hosts, ...tools, { source: '/index.html', destination: '/', permanent: true }]
+    // The developer category now holds the everyday developer tools, which
+    // already lived at /category/dev-utilities.
+    const categories = [{ source: '/category/developer', destination: '/category/dev-utilities', permanent: true }]
+    return [...hosts, ...tools, ...categories, { source: '/index.html', destination: '/', permanent: true }]
   },
   async headers() {
     return [

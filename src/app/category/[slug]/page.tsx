@@ -28,7 +28,7 @@ export default async function CategoryPage({ params }: Props) {
   return (
     <div>
       <JsonLd data={itemList(c.heading, tools.map((t) => ({ name: TOOL_CONTENT[t.slug].h1, path: toolPath(t.slug) })))} />
-      <Breadcrumbs items={[{ name: 'Home', path: '/' }, { name: 'Tools', path: '/tools' }, { name: c.id, path }]} />
+      <Breadcrumbs items={[{ name: 'Home', path: '/' }, { name: 'Tools', path: '/tools' }, { name: c.label, path }]} />
       <header className="border-b border-rule pb-6">
         <p className="font-mono text-xs uppercase tracking-[0.16em] text-accent">{tools.length} tools · {c.blurb}</p>
         <h1 className="mt-2 font-display text-5xl leading-none sm:text-6xl">{c.heading}</h1>
@@ -51,7 +51,7 @@ export default async function CategoryPage({ params }: Props) {
 
       <nav aria-label="Other categories" className="mt-12 flex flex-wrap gap-2 text-sm">
         {CATEGORIES.filter((o) => o.slug !== c.slug).map((o) => (
-          <Link key={o.slug} href={`/category/${o.slug}`} className="rounded-full border border-rule px-3 py-1.5 text-ink-2 hover:border-ink hover:text-ink">{o.id}</Link>
+          <Link key={o.slug} href={`/category/${o.slug}`} className="rounded-full border border-rule px-3 py-1.5 text-ink-2 hover:border-ink hover:text-ink">{o.label}</Link>
         ))}
       </nav>
     </div>

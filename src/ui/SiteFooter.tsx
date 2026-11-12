@@ -12,7 +12,7 @@ export function SiteFooter() {
           <ul className="space-y-1.5">
             <li><Link href="/tools" className="inline-block py-0.5 hover:text-accent">All tools</Link></li>
             {CATEGORIES.map((c) => (
-              <li key={c.slug}><Link href={`/category/${c.slug}`} className="inline-block py-0.5 hover:text-accent">{c.id}</Link></li>
+              <li key={c.slug}><Link href={`/category/${c.slug}`} className="inline-block py-0.5 hover:text-accent">{c.label}</Link></li>
             ))}
           </ul>
         </nav>
