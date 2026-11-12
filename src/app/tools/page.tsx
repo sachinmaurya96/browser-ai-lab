@@ -8,7 +8,7 @@ import { Breadcrumbs } from '../../ui/Breadcrumbs'
 
 export const metadata = pageMetadata({
   title: `All ${TOOLS.length} Free AI and Utility Tools`,
-  description: `A directory of all ${TOOLS.length} Browser AI Lab tools: PDF, image, audio, text, AI assistant, developer and social media tools that run privately in your browser.`,
+  description: `A directory of all ${TOOLS.length} Browser AI Lab tools: PDF, image, audio, text, social media and developer tools that run privately in your browser.`,
   path: '/tools',
   defaultImage: true,
 })
@@ -30,7 +30,7 @@ export default function ToolsIndex() {
         {CATEGORIES.map((c) => (
           <section key={c.id} aria-labelledby={`dir-${c.slug}`}>
             <h2 id={`dir-${c.slug}`} className="font-display text-3xl">
-              <Link href={`/category/${c.slug}`} className="hover:text-accent">{c.id}</Link>
+              <Link href={`/category/${c.slug}`} className="hover:text-accent">{c.label}</Link>
             </h2>
             <p className="text-sm text-ink-3">{c.blurb}</p>
             <ul className="mt-3 divide-y divide-rule border-y border-rule">

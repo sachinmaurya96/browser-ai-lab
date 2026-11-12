@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { PDFDocument } from 'pdf-lib'
 import { Minimize2 } from 'lucide-react'
 import { pdfStem, renderPage, savePdf } from '../../lib/pdf'
 import { formatBytes } from '../../lib/images'
 import { useTask } from '../../lib/hooks'
 import { FileBadge, FileDrop, PlainToolPage, usePdf } from '../../ui/PdfKit'
+import { LazyPdfPreview } from '../../ui/ResultPanel'
 import { Button, Notice, Panel, Segmented } from '../../ui/kit'
 
 type Level = 'light' | 'medium' | 'strong'
@@ -15,7 +16,7 @@ export default function CompressPage() {
   const pdf = usePdf()
   const task = useTask()
   const [level, setLevel] = useState<Level>('medium')
-  const [result, setResult] = useState<{ bytes: Uint8Array; size: number } | null>(null)
+  const [result, setResult] = useState<{ bytes: Uint8Array; size: number; blob: Blob } | null>(null)
   const [progress, setProgress] = useState('')
 
   const run = () =>
@@ -34,7 +35,7 @@ export default function CompressPage() {
       }
       setProgress('')
       const bytes = await out.save()
-      setResult({ bytes, size: bytes.length })
+      setResult({ bytes, size: bytes.length, blob: new Blob([bytes as BlobPart], { type: 'application/pdf' }) })
     })
 
   const saved = result && pdf.file ? 1 - result.size / pdf.file.size : 0
@@ -60,6 +61,10 @@ export default function CompressPage() {
                 </div>
                 <Button className="mt-5 w-full" tone="primary" disabled={saved <= 0} onClick={() => savePdf(result.bytes, `${pdfStem(pdf.file!.name)}-compressed.pdf`)}>Download compressed PDF</Button>
                 {saved <= 0 && <p className="mt-2 text-sm text-ink-3">The original is smaller. Keep it, or try "Smallest".</p>}
+                <div className="mt-5">
+                  <p className="mb-2 font-mono text-[11px] uppercase tracking-wide text-ink-3">Compressed PDF · check the quality before downloading</p>
+                  <Suspense fallback={<p className="font-mono text-xs text-ink-3">Loading preview…</p>}><LazyPdfPreview blob={result.blob} /></Suspense>
+                </div>
               </>
             ) : (
               <p className="py-12 text-center text-sm text-ink-3">Pick a level and compress.</p>

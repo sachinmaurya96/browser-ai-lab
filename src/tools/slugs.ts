@@ -8,7 +8,28 @@
  *
  * Kept free of React/icon imports so next.config.ts can import it.
  */
-export const LEGACY_SLUGS: Record<string, string> = {
+/**
+ * The public catalog. Only these tools appear in navigation, search, the
+ * sitemap and category pages, and only these get a /tools/[slug] page. The
+ * rest stay in the codebase (registry, content, implementations) but are
+ * retired: their URLs return 404. Add a slug back here to restore a tool.
+ */
+export const ACTIVE_TOOLS: ReadonlySet<string> = new Set([
+  // PDF
+  'merge-pdf', 'split-pdf', 'organize-pdf-pages', 'images-to-pdf', 'pdf-to-images', 'pdf-to-text', 'watermark-pdf', 'ocr-scanned-pdf',
+  // Image
+  'background-remover', 'image-upscaler', 'image-to-text', 'image-optimizer',
+  // Audio
+  'speech-to-text', 'vocal-remover', 'text-to-speech',
+  // Text
+  'ai-translator', 'text-summarizer',
+  // Social
+  'bold-text-generator', 'social-media-image-resizer',
+  // Developer
+  'json-formatter', 'jwt-decoder', 'regex-tester', 'diff-checker', 'csv-to-json', 'qr-code-generator',
+])
+
+const ALL_LEGACY_SLUGS: Record<string, string> = {
   'text-style': 'bold-text-generator',
   'social-image': 'social-media-image-resizer',
   'pdf-merge': 'merge-pdf',
@@ -60,5 +81,8 @@ export const LEGACY_SLUGS: Record<string, string> = {
   qr: 'qr-code-generator',
   'img-optimize': 'image-optimizer',
 }
+
+/** Old IDs of active tools only, so no redirect ever lands on a retired page. */
+export const LEGACY_SLUGS: Record<string, string> = Object.fromEntries(Object.entries(ALL_LEGACY_SLUGS).filter(([, slug]) => ACTIVE_TOOLS.has(slug)))
 
 export const toolPath = (slug: string) => `/tools/${slug}`

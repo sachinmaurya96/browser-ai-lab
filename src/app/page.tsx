@@ -68,9 +68,9 @@ export default function Home() {
       <AboutCard />
 
       <p className="mt-10 rounded-xl border border-dashed border-rule p-5 text-sm text-ink-3">
-        First use of each AI tool downloads its model once (from ~25 MB up to ~2 GB), then it&apos;s cached. Chrome or Edge with
-        WebGPU is fastest; other browsers use the CPU and are slower. The PDF, social and developer utilities need no
-        model at all.
+        First use of each AI tool downloads its model once (from about 55 MB up to about 650 MB), then it&apos;s cached. Chrome or
+        Edge with WebGPU is fastest; other browsers use the CPU and are slower. Most PDF tools, the social tools and the
+        developer tools need no download at all.
       </p>
     </div>
   )

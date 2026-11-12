@@ -125,6 +125,12 @@ export function useModel(spawn: () => Worker, config?: unknown) {
     workerRef.current?.postMessage({ kind: 'stop' } satisfies ToWorker)
   }, [])
 
+  /** Replace the worker's config. Only affects a boot that hasn't started yet. */
+  const configure = useCallback((next: unknown) => {
+    configRef.current = next
+    workerRef.current?.postMessage({ kind: 'configure', config: next } satisfies ToWorker)
+  }, [])
+
   const run = useCallback(
     <T,>(op: string, input: unknown, onEmit?: (data: unknown) => void): Promise<T> => {
       const worker = workerRef.current
@@ -139,7 +145,7 @@ export function useModel(spawn: () => Worker, config?: unknown) {
     [],
   )
 
-  return { ...state, boot, run, stop }
+  return { ...state, boot, run, stop, configure }
 }
 
 export type Model = ReturnType<typeof useModel>

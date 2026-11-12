@@ -46,7 +46,7 @@ export default function OrganizePage() {
             <Button tone="outline" size="sm" onClick={() => rotateAll(-90)}><RotateCcw size={15} /> All</Button>
             <Button tone="outline" size="sm" onClick={() => rotateAll(90)}><RotateCw size={15} /> All</Button>
             <Button tone="ghost" size="sm" onClick={reset}><Undo2 size={15} /> Reset</Button>
-            <Button tone="primary" disabled={!slots.length || task.busy} onClick={() => void save()}><Download size={16} /> {task.busy ? 'Saving…' : `Save ${slots.length} pages`}</Button>
+            <Button tone="primary" disabled={!slots.length || task.busy} onClick={() => void save()}><Download size={16} /> {task.busy ? 'Saving…' : `Download PDF (${slots.length} ${slots.length === 1 ? 'page' : 'pages'})`}</Button>
           </div>
           <Panel kicker="Pages" title="Reorder, rotate or delete pages">
             <ol className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6">

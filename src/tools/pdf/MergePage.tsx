@@ -1,16 +1,23 @@
-import { useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { PDFDocument } from 'pdf-lib'
 import { ArrowDown, ArrowUp, Combine, X } from 'lucide-react'
-import { savePdf } from '../../lib/pdf'
 import { formatBytes } from '../../lib/images'
 import { useTask } from '../../lib/hooks'
 import { FileDrop, PlainToolPage } from '../../ui/PdfKit'
+import { LazyPdfPreview, ResultPanel, focusSettings, useGenerated } from '../../ui/ResultPanel'
 import { Button, Field, Panel, inputClass } from '../../ui/kit'
+
+const pdfName = (n: string) => (n.trim() ? (/\.pdf$/i.test(n.trim()) ? n.trim() : `${n.trim()}.pdf`) : 'merged.pdf')
 
 export default function MergePage() {
   const [files, setFiles] = useState<File[]>([])
   const [name, setName] = useState('merged.pdf')
   const task = useTask()
+  const result = useGenerated()
+  const [pages, setPages] = useState(0)
+  // A different set or order of files makes the merged result out of date.
+  const { clear } = result
+  useEffect(clear, [files, clear])
 
   const add = (list: File[]) => setFiles((f) => [...f, ...list.filter((x) => /pdf$/i.test(x.type) || /\.pdf$/i.test(x.name))])
   const move = (i: number, d: number) => setFiles((f) => { const n = [...f]; [n[i], n[i + d]] = [n[i + d], n[i]]; return n })
@@ -19,11 +26,17 @@ export default function MergePage() {
     task.go(async () => {
       const out = await PDFDocument.create()
       for (const f of files) {
-        const src = await PDFDocument.load(await f.arrayBuffer(), { ignoreEncryption: true })
-        const pages = await out.copyPages(src, src.getPageIndices())
-        pages.forEach((p) => out.addPage(p))
+        let src: PDFDocument
+        try {
+          src = await PDFDocument.load(await f.arrayBuffer(), { ignoreEncryption: true })
+        } catch {
+          throw new Error(`"${f.name}" couldn't be read. It may be damaged or not a real PDF.`)
+        }
+        const copied = await out.copyPages(src, src.getPageIndices())
+        copied.forEach((p) => out.addPage(p))
       }
-      savePdf(await out.save(), name.endsWith('.pdf') ? name : `${name}.pdf`)
+      setPages(out.getPageCount())
+      result.set(new Blob([(await out.save()) as BlobPart], { type: 'application/pdf' }), pdfName(name))
     })
 
   return (
@@ -44,12 +57,19 @@ export default function MergePage() {
             ))}
           </ol>
         </Panel>
-        <Panel kicker="Output" title="Combine">
-          <Field label="File name" htmlFor="name"><input id="name" className={inputClass} value={name} onChange={(e) => setName(e.target.value)} /></Field>
-          <Button className="mt-4 w-full" tone="primary" disabled={files.length < 2 || task.busy} onClick={() => void merge()}><Combine size={16} /> {task.busy ? 'Merging…' : 'Merge & download'}</Button>
-          <p className="mt-3 text-xs text-ink-3">Combine invoices, chapters, scans or forms into one file. Total {formatBytes(files.reduce((s, f) => s + f.size, 0))}.</p>
-        </Panel>
+        <div id="merge-settings"><Panel kicker="Output" title="Combine">
+          <Field label="File name" htmlFor="name"><input id="name" className={inputClass} value={name} onChange={(e) => { setName(e.target.value); result.rename(pdfName(e.target.value)) }} /></Field>
+          <Button className="mt-4 w-full" tone="primary" disabled={files.length < 2 || task.busy} onClick={() => void merge()}><Combine size={16} /> {task.busy ? 'Merging…' : result.file ? 'Merge again' : 'Merge PDFs'}</Button>
+          <p className="mt-3 text-xs text-ink-3">{files.length < 2 ? 'Add at least two PDFs. ' : ''}Combine invoices, chapters, scans or forms into one file. Total {formatBytes(files.reduce((s, f) => s + f.size, 0))}. You'll see the merged pages before downloading.</p>
+        </Panel></div>
       </div>
+      {result.file && (
+        <ResultPanel file={result.file} format="PDF" downloadLabel="Download PDF" facts={[{ label: 'Pages', value: pages }, { label: 'From', value: `${files.length} files` }]} onEdit={() => focusSettings('merge-settings')} onReset={() => setFiles([])}>
+          <Suspense fallback={<p className="font-mono text-xs text-ink-3">Loading preview…</p>}>
+            <LazyPdfPreview blob={result.file.blob} />
+          </Suspense>
+        </ResultPanel>
+      )}
     </PlainToolPage>
   )
 }

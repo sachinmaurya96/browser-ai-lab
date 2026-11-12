@@ -1,17 +1,18 @@
 import { useEffect, useState } from 'react'
 import JSZip from 'jszip'
-import { Download, Trash2 } from 'lucide-react'
+import { Download, Eye, Trash2, X } from 'lucide-react'
 import { PlainToolPage, FileDrop } from '../../ui/PdfKit'
 import { formatBytes, saveBlob, stem } from '../../lib/images'
 import { useTask } from '../../lib/hooks'
-import { Button, Field, Panel, Segmented, Tag, inputClass } from '../../ui/kit'
+import { Button, Field, Notice, Panel, Segmented, Tag, inputClass } from '../../ui/kit'
 
 type Format = 'image/webp' | 'image/jpeg' | 'image/png'
 const EXT: Record<Format, string> = { 'image/webp': 'webp', 'image/jpeg': 'jpg', 'image/png': 'png' }
 
 interface Item {
   file: File
-  out?: { blob: Blob; url: string; w: number; h: number }
+  /** `ext` is fixed at encode time, so names match the bytes even after settings change. */
+  out?: { blob: Blob; url: string; w: number; h: number; ext: string }
 }
 
 async function convert(file: File, format: Format, quality: number, maxSide: number) {
@@ -31,7 +32,7 @@ async function convert(file: File, format: Format, quality: number, maxSide: num
   ctx.drawImage(bmp, 0, 0, w, h)
   bmp.close()
   const blob = await new Promise<Blob>((r, j) => canvas.toBlob((b) => (b ? r(b) : j(new Error('Encoding failed'))), format, quality))
-  return { blob, url: URL.createObjectURL(blob), w, h }
+  return { blob, url: URL.createObjectURL(blob), w, h, ext: EXT[format] }
 }
 
 export default function ImageOptimizePage() {
@@ -40,19 +41,31 @@ export default function ImageOptimizePage() {
   const [quality, setQuality] = useState(0.8)
   const [maxSide, setMaxSide] = useState(1920)
   const task = useTask()
+  const settings = `${format}|${quality}|${maxSide}`
+  const [applied, setApplied] = useState(settings)
+  const [compare, setCompare] = useState<{ index: number; original: string } | null>(null)
+  useEffect(() => () => void (compare && URL.revokeObjectURL(compare.original)), [compare])
 
   useEffect(() => () => items.forEach((i) => i.out && URL.revokeObjectURL(i.out.url)), [items])
 
   const run = (list = items) =>
     task.go(async () => {
       const done: Item[] = []
-      for (const it of list) done.push({ file: it.file, out: await convert(it.file, format, quality, maxSide) })
+      for (const it of list) {
+        try {
+          done.push({ file: it.file, out: await convert(it.file, format, quality, maxSide) })
+        } catch {
+          throw new Error(`"${it.file.name}" couldn't be decoded. This browser may not support that format.`)
+        }
+      }
       setItems(done)
+      setApplied(settings)
     })
 
   const before = items.reduce((s, i) => s + i.file.size, 0)
   const after = items.reduce((s, i) => s + (i.out?.blob.size ?? 0), 0)
-  const name = (i: Item) => `${stem(i.file.name)}.${EXT[format]}`
+  const name = (i: Item) => `${stem(i.file.name)}.${i.out?.ext ?? EXT[format]}`
+  const stale = items.some((i) => i.out) && applied !== settings
 
   const downloadAll = async () => {
     if (items.length === 1 && items[0].out) return saveBlob(items[0].out.blob, name(items[0]))
@@ -72,13 +85,14 @@ export default function ImageOptimizePage() {
               <input id="max" type="number" min={0} step={160} className={inputClass} value={maxSide} onChange={(e) => setMaxSide(+e.target.value)} />
             </Field>
             <div className="flex flex-wrap gap-1.5">{[0, 3840, 1920, 1280, 800, 512].map((n) => <Button key={n} size="sm" tone={maxSide === n ? 'primary' : 'ghost'} onClick={() => setMaxSide(n)}>{n || 'Original'}</Button>)}</div>
-            <Button className="w-full" tone="primary" disabled={!items.length || task.busy} onClick={() => void run()}>{task.busy ? 'Optimizing…' : 'Optimize'}</Button>
+            <Button className="w-full" tone="primary" disabled={!items.length || task.busy} onClick={() => void run()}>{task.busy ? 'Optimizing…' : stale ? 'Apply new settings' : 'Optimize'}</Button>
+            {stale && <p className="text-xs text-sun">Settings changed. The results shown use the previous settings until you apply them.</p>}
           </div>
         </Panel>
         <Panel
           kicker="Images"
           title={after ? <span className="flex items-center gap-2">{formatBytes(before)} → {formatBytes(after)} <Tag tone={after < before ? 'sea' : 'accent'}>{after < before ? `−${Math.round((1 - after / before) * 100)}%` : `+${Math.round((after / before - 1) * 100)}%`}</Tag></span> : `${items.length} images`}
-          actions={<><Button size="sm" tone="ghost" disabled={!items.length} onClick={() => setItems([])}><Trash2 size={14} /> Clear</Button><Button size="sm" tone="outline" disabled={!items.some((i) => i.out)} onClick={() => void downloadAll()}><Download size={14} /> {items.length > 1 ? 'ZIP' : 'Download'}</Button></>}
+          actions={<><Button size="sm" tone="ghost" disabled={!items.length} onClick={() => { setItems([]); setCompare(null) }}><Trash2 size={14} /> Clear</Button><Button size="sm" tone="outline" disabled={!items.some((i) => i.out)} onClick={() => void downloadAll()}><Download size={14} /> {items.length > 1 ? 'ZIP' : 'Download'}</Button></>}
         >
           <FileDrop multiple accept="image/*" label="Drop images (JPG, PNG, WebP, GIF, AVIF…)" compact={items.length > 0} onFiles={(f) => { const list = [...items, ...f.filter((x) => x.type.startsWith('image/')).map((file) => ({ file }))]; setItems(list); void run(list) }} />
           <ul className="mt-4 space-y-2">
@@ -89,10 +103,28 @@ export default function ImageOptimizePage() {
                   <p className="truncate text-sm font-medium">{it.file.name}</p>
                   <p className="font-mono text-xs text-ink-3">{formatBytes(it.file.size)}{it.out && <> → <span className={it.out.blob.size < it.file.size ? 'text-sea' : 'text-accent'}>{formatBytes(it.out.blob.size)}</span> · {it.out.w}×{it.out.h}</>}</p>
                 </div>
-                {it.out && <Button size="sm" tone="ghost" onClick={() => saveBlob(it.out!.blob, name(it))}><Download size={14} /></Button>}
+                {it.out && <Button size="sm" tone="ghost" aria-label={`Compare ${it.file.name} before and after`} onClick={() => setCompare({ index: i, original: URL.createObjectURL(it.file) })}><Eye size={14} /></Button>}
+                {it.out && <Button size="sm" tone="ghost" aria-label={`Download ${name(it)}`} onClick={() => saveBlob(it.out!.blob, name(it))}><Download size={14} /></Button>}
               </li>
             ))}
           </ul>
+          {compare && items[compare.index]?.out && (
+            <div className="mt-4 rounded-lg border border-ink/60 p-3">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <p className="truncate text-sm font-medium">{items[compare.index].file.name}</p>
+                <Button size="sm" tone="ghost" aria-label="Close comparison" onClick={() => setCompare(null)}><X size={14} /></Button>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[{ label: `Original · ${formatBytes(items[compare.index].file.size)}`, src: compare.original }, { label: `Optimized · ${formatBytes(items[compare.index].out!.blob.size)} · ${items[compare.index].out!.w}×${items[compare.index].out!.h}`, src: items[compare.index].out!.url }].map((v) => (
+                  <figure key={v.label}>
+                    <img src={v.src} alt={v.label} className="checker max-h-80 w-full rounded object-contain" />
+                    <figcaption className="mt-1 font-mono text-[11px] text-ink-3">{v.label}</figcaption>
+                  </figure>
+                ))}
+              </div>
+            </div>
+          )}
+          {stale && <div className="mt-3"><Notice tone="warn">These results use your previous settings. Click “Apply new settings” to update them.</Notice></div>}
           <p className="mt-3 text-xs text-ink-3">Converting also strips EXIF metadata such as GPS location, which makes photos safer to share.</p>
         </Panel>
       </div>

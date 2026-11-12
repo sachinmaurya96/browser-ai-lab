@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { PDFDocument, StandardFonts, degrees, rgb } from 'pdf-lib'
 import { Stamp } from 'lucide-react'
-import { pdfStem, savePdf } from '../../lib/pdf'
+import { pdfStem } from '../../lib/pdf'
 import { useTask } from '../../lib/hooks'
 import { FileBadge, FileDrop, PlainToolPage, Thumb, usePdf } from '../../ui/PdfKit'
+import { LazyPdfPreview, ResultPanel, focusSettings, useGenerated } from '../../ui/ResultPanel'
 import { Button, Field, Panel, cx, inputClass } from '../../ui/kit'
 
 type Pos = 'bottom-center' | 'bottom-right' | 'top-right'
@@ -21,6 +22,9 @@ export default function StampPage() {
   const [numbers, setNumbers] = useState(true)
   const [pos, setPos] = useState<Pos>('bottom-center')
   const [format, setFormat] = useState('Page {n} of {total}')
+  const result = useGenerated()
+  const { clear } = result
+  useEffect(clear, [pdf.doc, mark, text, color, opacity, size, numbers, pos, format, clear])
 
   const run = () =>
     task.go(async () => {
@@ -45,7 +49,7 @@ export default function StampPage() {
           page.drawText(label, { x, y, size: fs, font: regular, color: rgb(0.35, 0.35, 0.35) })
         }
       })
-      savePdf(await doc.save(), `${pdfStem(pdf.file!.name)}-stamped.pdf`)
+      result.set(new Blob([(await doc.save()) as BlobPart], { type: 'application/pdf' }), `${pdfStem(pdf.file!.name)}-stamped.pdf`)
     })
 
   return (
@@ -54,14 +58,14 @@ export default function StampPage() {
         <FileDrop onFiles={(f) => void pdf.load(f[0])} />
       ) : (
         <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
-          <Panel kicker="Preview" title="First page (watermark preview is approximate)">
+          <Panel kicker="Preview" title="Quick preview of page 1 (approximate; apply to see the exact result)">
             <div className="relative mx-auto max-w-sm">
               <Thumb doc={pdf.doc} page={1} width={380} />
               {mark && <span className="pointer-events-none absolute inset-0 grid place-items-center overflow-hidden"><span className="-rotate-45 font-bold whitespace-nowrap" style={{ color, opacity, fontSize: size / 2.2 }}>{text}</span></span>}
               {numbers && <span className={cx('absolute font-mono text-[9px] text-ink-3', pos === 'top-right' ? 'top-2 right-4' : pos === 'bottom-right' ? 'right-4 bottom-2' : 'bottom-2 left-1/2 -translate-x-1/2')}>{format.replace('{n}', '1').replace('{total}', String(pdf.doc.numPages))}</span>}
             </div>
           </Panel>
-          <div className="space-y-4">
+          <div className="space-y-4" id="stamp-settings">
             <FileBadge file={pdf.file} pages={pdf.doc.numPages} onClear={pdf.clear} />
             <Panel kicker="Watermark" title={<label className="flex items-center gap-2"><input type="checkbox" checked={mark} onChange={(e) => setMark(e.target.checked)} className="accent-[var(--accent)]" /> Diagonal text</label>}>
               <div className={cx('space-y-3', !mark && 'pointer-events-none opacity-40')}>
@@ -78,9 +82,15 @@ export default function StampPage() {
                 </select>
               </div>
             </Panel>
-            <Button className="w-full" tone="primary" disabled={task.busy || (!mark && !numbers)} onClick={() => void run()}><Stamp size={16} /> {task.busy ? 'Applying…' : 'Apply & download'}</Button>
+            <Button className="w-full" tone="primary" disabled={task.busy || (!mark && !numbers)} onClick={() => void run()}><Stamp size={16} /> {task.busy ? 'Applying…' : 'Apply to all pages'}</Button>
+            <p className="text-xs text-ink-3">You'll see the stamped PDF, every page, before downloading.</p>
           </div>
         </div>
+      )}
+      {result.file && pdf.doc && (
+        <ResultPanel file={result.file} format="PDF" downloadLabel="Download PDF" facts={[{ label: 'Pages', value: pdf.doc.numPages }]} onEdit={() => focusSettings('stamp-settings')}>
+          <Suspense fallback={<p className="font-mono text-xs text-ink-3">Loading preview…</p>}><LazyPdfPreview blob={result.file.blob} /></Suspense>
+        </ResultPanel>
       )}
     </PlainToolPage>
   )

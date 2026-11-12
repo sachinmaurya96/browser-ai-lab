@@ -37,7 +37,7 @@ export default async function ToolPage({ params }: Props) {
     <article className="space-y-6">
       <JsonLd data={toolApp(tool, c, path)} />
       <header className="border-b border-rule pb-6">
-        <Breadcrumbs items={[{ name: 'Home', path: '/' }, { name: cat.id, path: `/category/${cat.slug}` }, { name: tool.name, path }]} />
+        <Breadcrumbs items={[{ name: 'Home', path: '/' }, { name: cat.label, path: `/category/${cat.slug}` }, { name: tool.name, path }]} />
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="max-w-3xl">
             <p className="font-mono text-xs uppercase tracking-[0.16em] text-accent">
@@ -137,10 +137,10 @@ export default async function ToolPage({ params }: Props) {
         </ul>
         {siblings.length > 0 && (
           <div className="mt-6">
-            <Kicker>More {cat.id} tools</Kicker>
+            <Kicker>More {cat.label.toLowerCase()}</Kicker>
             <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1.5 text-sm">
               {siblings.map((t) => <li key={t.slug}><Link href={toolPath(t.slug)} className="underline decoration-rule underline-offset-4 hover:text-accent">{t.name}</Link></li>)}
-              <li><Link href={`/category/${cat.slug}`} className="font-medium text-accent hover:underline">All {cat.id} tools →</Link></li>
+              <li><Link href={`/category/${cat.slug}`} className="font-medium text-accent hover:underline">All {cat.label.toLowerCase()} →</Link></li>
             </ul>
           </div>
         )}

@@ -52,9 +52,7 @@ const APP_CATEGORY: Record<Tool['category'], string> = {
   Image: 'MultimediaApplication',
   Audio: 'MultimediaApplication',
   Text: 'UtilitiesApplication',
-  Assistants: 'UtilitiesApplication',
   Developer: 'DeveloperApplication',
-  'Dev Utilities': 'DeveloperApplication',
 }
 
 export const toolApp = (tool: Tool, c: ToolContent, path: string): Json => ({
