@@ -62,4 +62,5 @@ export const TOOL_PAGES: Record<string, ComponentType> = {
   'csv-to-json': dynamic(() => import('./dev/CsvPage'), { ssr: false, loading: ToolLoading }),
   'qr-code-generator': dynamic(() => import('./dev/QrPage'), { ssr: false, loading: ToolLoading }),
   'image-optimizer': dynamic(() => import('./dev/ImageOptimizePage'), { ssr: false, loading: ToolLoading }),
+  'screenshot-beautifier': dynamic(() => import('./screenshot/ScreenshotStudioPage'), { ssr: false, loading: ToolLoading }),
 }

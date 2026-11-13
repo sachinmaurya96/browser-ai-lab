@@ -19,6 +19,7 @@ export const ACTIVE_TOOLS: ReadonlySet<string> = new Set([
   'merge-pdf', 'split-pdf', 'organize-pdf-pages', 'images-to-pdf', 'pdf-to-images', 'pdf-to-text', 'watermark-pdf', 'ocr-scanned-pdf',
   // Image
   'background-remover', 'image-upscaler', 'image-to-text', 'image-optimizer',
+  'screenshot-beautifier',
   // Audio
   'speech-to-text', 'vocal-remover', 'text-to-speech',
   // Text

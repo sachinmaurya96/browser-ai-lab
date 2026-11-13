@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ChevronDown, Coffee, House, Menu, Moon, Star, Sun, WifiOff, X } from 'lucide-react'
+import { ChevronDown, Coffee, Flame, House, Menu, Moon, PanelLeftClose, PanelLeftOpen, Star, Sun, WifiOff, X } from 'lucide-react'
 import { useFavorites } from '../lib/favorites'
 import { LINKS } from '../site'
-import { CATEGORIES, TOOLS, type Category, type Tool } from '../tools'
+import { CATEGORIES, POPULAR, TOOLS, type Category, type Tool } from '../tools'
 import { toolPath } from '../tools/slugs'
 import { cx } from './kit'
 
@@ -36,14 +36,86 @@ function useTheme() {
   return [theme, toggle] as const
 }
 
+/**
+ * Desktop sidebar: full, or a narrow icon rail. The inline script in the root
+ * layout restores the choice before first paint (html[data-sidebar]); CSS
+ * picks the layout, so server and client markup always match.
+ */
+function useSidebar() {
+  const [collapsed, setCollapsed] = useState(false)
+  useEffect(() => setCollapsed(document.documentElement.dataset.sidebar === 'collapsed'), [])
+  const toggle = () => {
+    const next = !collapsed
+    if (next) document.documentElement.dataset.sidebar = 'collapsed'
+    else delete document.documentElement.dataset.sidebar
+    try {
+      localStorage.setItem('lab-sidebar', next ? 'collapsed' : 'open')
+    } catch {
+      /* storage unavailable */
+    }
+    setCollapsed(next)
+  }
+  return [collapsed, toggle] as const
+}
+
+function LogoMark() {
+  return (
+    <svg viewBox="0 0 32 32" className="size-8 shrink-0" aria-hidden>
+      <rect width="32" height="32" rx="7" fill="var(--ink)" />
+      <circle cx="16" cy="16" r="7" fill="none" stroke="var(--accent)" strokeWidth="3" />
+      <circle cx="16" cy="16" r="2.5" fill="var(--paper)" />
+    </svg>
+  )
+}
+
+/** The collapsed sidebar: home, one icon per category, theme and expand. */
+function SidebarRail({ onExpand, themeButton }: { onExpand: () => void; themeButton: ReactNode }) {
+  const pathname = usePathname()
+  const current = TOOLS.find((t) => pathname === toolPath(t.slug))?.category
+  return (
+    <div className="sidebar-rail h-full flex-col items-center gap-2 py-6">
+      <Link href="/" aria-label="Browser AI Lab home" className="mb-3">
+        <LogoMark />
+      </Link>
+      <button type="button" onClick={onExpand} aria-label="Expand sidebar" title="Expand sidebar" className="grid size-9 place-items-center rounded-md border border-rule text-ink-2 hover:border-ink hover:text-ink">
+        <PanelLeftOpen size={16} />
+      </button>
+      <span className="my-2 h-px w-8 bg-rule" aria-hidden />
+      <Link href="/" aria-label="Home" title="Home" className={cx('grid size-9 place-items-center rounded-md hover:bg-card hover:text-ink', pathname === '/' ? 'bg-ink text-paper hover:bg-ink hover:text-paper' : 'text-ink-2')}>
+        <House size={17} />
+      </Link>
+      {POPULAR.map((s) => TOOLS.find((t) => t.slug === s))
+        .filter((t): t is Tool => !!t)
+        .map((t) => {
+          const on = pathname === toolPath(t.slug)
+          return (
+            <Link key={t.slug} href={toolPath(t.slug)} aria-label={t.name} title={t.name} className={cx('grid size-9 place-items-center rounded-md hover:bg-card hover:text-ink', on ? 'bg-ink text-accent hover:bg-ink' : 'text-ink-2')}>
+              <t.icon size={17} />
+            </Link>
+          )
+        })}
+      <span className="my-2 h-px w-8 bg-rule" aria-hidden />
+      {CATEGORIES.map((c) => {
+        const on = current === c.id || pathname === `/category/${c.slug}`
+        return (
+          <Link key={c.id} href={`/category/${c.slug}`} aria-label={c.label} title={c.label} className={cx('grid size-9 place-items-center rounded-md hover:bg-card hover:text-ink', on ? 'bg-ink text-paper hover:bg-ink hover:text-paper' : 'text-ink-2')}>
+            <c.icon size={17} />
+          </Link>
+        )
+      })}
+      <div className="flex-1" />
+      <a href={LINKS.coffee} target="_blank" rel="noreferrer" aria-label="Buy me a coffee" title="Buy me a coffee" className="grid size-9 place-items-center rounded-md bg-accent text-accent-ink hover:opacity-90">
+        <Coffee size={16} aria-hidden />
+      </a>
+      {themeButton}
+    </div>
+  )
+}
+
 function Logo() {
   return (
     <Link href="/" className="flex items-center gap-2.5">
-      <svg viewBox="0 0 32 32" className="size-8 shrink-0" aria-hidden>
-        <rect width="32" height="32" rx="7" fill="var(--ink)" />
-        <circle cx="16" cy="16" r="7" fill="none" stroke="var(--accent)" strokeWidth="3" />
-        <circle cx="16" cy="16" r="2.5" fill="var(--paper)" />
-      </svg>
+      <LogoMark />
       <span className="leading-none">
         <span className="block font-display text-[22px] italic">Browser AI Lab</span>
         <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink-3">on-device · no server</span>
@@ -101,6 +173,7 @@ function ToolNav({ label, idPrefix }: { label: string; idPrefix: string }) {
   const pathname = usePathname()
   const { favorites, toggle, isFavorite } = useFavorites()
   const favTools = favorites.map((s) => TOOLS.find((t) => t.slug === s)).filter((t): t is Tool => !!t)
+  const popular = POPULAR.map((s) => TOOLS.find((t) => t.slug === s)).filter((t): t is Tool => !!t)
   const isActive = (t: Tool) => pathname === toolPath(t.slug)
   const current = TOOLS.find(isActive)?.category ?? CATEGORIES.find((c) => pathname === `/category/${c.slug}`)?.id ?? null
   const [open, setOpen] = useState<Category | null>(current)
@@ -118,6 +191,15 @@ function ToolNav({ label, idPrefix }: { label: string; idPrefix: string }) {
       >
         <House size={16} aria-hidden /> Home
       </Link>
+
+      {popular.length > 0 && (
+        <div>
+          <p className="mb-1 flex items-center gap-1.5 px-3 font-mono text-[11px] uppercase tracking-[0.16em] text-accent">
+            <Flame size={11} aria-hidden /> Popular
+          </p>
+          {popular.map((t) => <NavItem key={t.slug} tool={t} fav={isFavorite(t.slug)} active={isActive(t)} onToggle={() => toggle(t.slug)} />)}
+        </div>
+      )}
 
       {favTools.length > 0 && (
         <div>
@@ -228,6 +310,7 @@ function MobileNav() {
 
 export function Shell({ children }: { children: ReactNode }) {
   const [theme, toggleTheme] = useTheme()
+  const [collapsed, toggleSidebar] = useSidebar()
 
   const themeButton = (
     <button
@@ -241,10 +324,15 @@ export function Shell({ children }: { children: ReactNode }) {
   )
 
   return (
-    <div className="min-h-dvh lg:grid lg:grid-cols-[264px_1fr]">
-      {/* Desktop sidebar */}
-      <aside className="sticky top-0 hidden h-dvh flex-col border-r border-rule bg-paper-2/60 px-5 py-6 lg:flex">
+    <div className="lab-shell min-h-dvh">
+      {/* Desktop sidebar: full, or collapsed to an icon rail */}
+      <aside className="sticky top-0 hidden h-dvh border-r border-rule bg-paper-2/60 lg:block" aria-label="Site navigation" data-collapsed={collapsed || undefined}>
+        <SidebarRail onExpand={toggleSidebar} themeButton={themeButton} />
+        <div className="sidebar-full relative h-full flex-col px-5 py-6">
         <Logo />
+        <button type="button" onClick={toggleSidebar} aria-label="Collapse sidebar" title="Collapse sidebar" className="absolute top-2 right-2 grid size-7 place-items-center rounded-md text-ink-3 hover:bg-card hover:text-ink">
+          <PanelLeftClose size={15} />
+        </button>
         <div className="-mx-2 mt-6 flex-1 overflow-x-hidden overflow-y-auto px-2 pb-4">
           <ToolNav label="Tools" idPrefix="d" />
         </div>
@@ -260,6 +348,7 @@ export function Shell({ children }: { children: ReactNode }) {
             {themeButton}
             <Link href="/about" className="text-xs text-ink-3 hover:text-accent">by Sachin Maurya</Link>
           </div>
+        </div>
         </div>
       </aside>
 

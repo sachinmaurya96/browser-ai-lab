@@ -6,7 +6,8 @@ import { ConsentSettings } from '../../ui/Analytics'
 
 export const metadata = pageMetadata({
   title: 'Privacy Policy',
-  description: 'How Browser AI Lab handles your data: files are processed on your device and never uploaded. What the site stores in your browser and which services it contacts.',
+  description: 'How Browser AI Lab handles your data: files are processed on your device and never uploaded, what is stored in your browser and which services it contacts.',
+  keywords: ['browser ai lab privacy policy', 'no upload privacy', 'on-device processing'],
   path: '/privacy',
   defaultImage: true,
 })

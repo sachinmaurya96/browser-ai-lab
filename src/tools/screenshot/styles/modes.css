@@ -1,0 +1,662 @@
+/* Modes: the header mode switcher and the Code / Post / App Store inspectors
+   and stage pieces. Confectionery tokens and components only. */
+@layer components {
+  /* ---------- Mode switcher ---------- */
+  :where(.sst) .mode-switch {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 3px;
+    margin-left: var(--sc-space-3);
+    border-radius: 14px;
+    background: var(--sc-well);
+    box-shadow: var(--sc-shadow-well);
+    flex: none;
+  }
+  :where(.sst) .mode-switch button {
+    height: 32px;
+    min-width: 34px;
+    padding: 0 9px;
+    border-radius: 11px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 650;
+    color: var(--sc-ink-2);
+    white-space: nowrap;
+    transition:
+      background var(--sc-dur-base) var(--sc-ease-out),
+      color var(--sc-dur-base);
+  }
+  :where(.sst) .mode-switch button:hover {
+    color: var(--sc-ink);
+    background: var(--sc-well-hover);
+  }
+  :where(.sst) .mode-switch {
+    position: relative;
+    isolation: isolate;
+  }
+  :where(.sst) .mode-switch button {
+    position: relative;
+    z-index: 1;
+  }
+  :where(.sst) .mode-switch .ms-pill {
+    position: absolute;
+    top: 3px;
+    bottom: 3px;
+    left: 0;
+    border-radius: 11px;
+    background: var(--sc-surface);
+    box-shadow:
+      0 1px 2px rgba(74, 45, 20, 0.12),
+      inset 0 -1.5px 0 rgba(74, 45, 20, 0.07);
+    transition:
+      transform var(--sc-dur-base) var(--sc-ease-out),
+      width var(--sc-dur-base) var(--sc-ease-out);
+    z-index: 0;
+    pointer-events: none;
+  }
+  :where(.sst) .mode-switch button.on {
+    color: var(--sc-ink);
+  }
+  :where(.sst) .mode-switch button.on:hover {
+    background: none;
+  }
+  :where(.sst) .mode-switch button.on svg {
+    color: var(--sc-accent-text);
+  }
+  :where(.sst) .mode-switch button:focus-visible {
+    outline: none;
+    box-shadow: var(--sc-focus-ring);
+  }
+  /* Only the current mode is labelled until there is room for all four. */
+  :where(.sst) .mode-switch button:not(.on) .lbl {
+    display: none;
+  }
+  @container sst (min-width: 1600px) {
+    :where(.sst) .mode-switch button:not(.on) .lbl {
+      display: inline;
+    }
+  }
+  @container sst (max-width: 1439px) {
+    :where(.sst) .header .brand .word {
+      display: none;
+    }
+  }
+  @container sst (max-width: 1100px) {
+    :where(.sst) .mode-switch button .lbl {
+      display: none;
+    }
+  }
+
+  /* ---------- Code ---------- */
+  /* Long lines wrap in the editor (never clipped); the image keeps them whole. */
+  :where(.sst) .code-input textarea {
+    font:
+      400 12px/19px var(--sc-font-mono),
+      monospace;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    tab-size: 2;
+    min-height: 140px;
+    max-height: 460px;
+    resize: vertical;
+  }
+  /* Language and file name each get a full row, so "TypeScript" never truncates. */
+  :where(.sst) .code-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    margin-top: 8px;
+  }
+  :where(.sst) .lang-chip {
+    height: var(--sc-control-h);
+    border-radius: var(--sc-radius-md);
+    padding: 0 10px 0 12px;
+    font-size: 12.5px;
+    min-width: 0;
+    justify-content: flex-start;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  :where(.sst) .lang-chip .lang-txt {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: left;
+  }
+  :where(.sst) .lang-auto {
+    font-size: 10.5px;
+    color: var(--sc-accent-text);
+    background: var(--sc-accent-soft);
+    border-radius: 6px;
+    padding: 2px 5px;
+    flex: none;
+  }
+  :where(.sst) .code-title svg {
+    color: var(--sc-ink-3);
+    flex: none;
+  }
+  :where(.sst) .lang-menu .lang-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    max-height: min(420px, 60vh);
+    overflow-y: auto;
+  }
+  :where(.sst) .presets.two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 10px;
+  }
+  :where(.sst) .preset .thumb.wide {
+    aspect-ratio: 16 / 10;
+  }
+  :where(.sst) .rail .preset .thumb.wide {
+    aspect-ratio: 16 / 10;
+  }
+}
+
+@layer components {
+  :where(.sst) .mode-chip {
+    padding: 0 8px 0 10px;
+    gap: 4px;
+  }
+  :where(.sst) .mode-item {
+    height: auto;
+    min-height: 48px;
+    padding: 8px 10px;
+    align-items: flex-start;
+  }
+  :where(.sst) .mode-item span {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    text-align: left;
+  }
+  :where(.sst) .mode-item b {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--sc-ink);
+  }
+  :where(.sst) .mode-item small {
+    font-size: 12px;
+    color: var(--sc-ink-3);
+    font-weight: 500;
+    white-space: normal;
+  }
+  :where(.sst) .mode-item svg {
+    margin-top: 2px;
+  }
+  :where(.sst) .m-body .code-input textarea {
+    max-height: 30vh;
+  }
+}
+
+@layer components {
+  /* ---------- Post ---------- */
+  :where(.sst) .field-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 12px;
+    min-width: 0;
+  }
+  :where(.sst) .field-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--sc-ink-2);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+  }
+  :where(.sst) .field-label .muted {
+    font-weight: 500;
+    font-size: 11.5px;
+  }
+  :where(.sst) .field-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+  }
+  :where(.sst) .field-stack .input.area textarea {
+    min-height: 96px;
+    line-height: 19px;
+  }
+  :where(.sst) .avatar-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 14px;
+    padding: 8px 10px 8px 8px;
+    border-radius: 16px;
+    background: var(--sc-well);
+  }
+  :where(.sst) .avatar-pick {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    flex: none;
+    background: linear-gradient(135deg, var(--sc-candy-300), var(--sc-candy-500));
+    color: #fff;
+    font: 800 16px/1 var(--sc-font-display);
+    display: grid;
+    place-items: center;
+    box-shadow: var(--sc-shadow-raised);
+  }
+  :where(.sst) .avatar-pick img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  :where(.sst) .avatar-pick i {
+    position: absolute;
+    right: -3px;
+    bottom: -3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--sc-surface);
+    color: var(--sc-ink-2);
+    display: grid;
+    place-items: center;
+    box-shadow: var(--sc-shadow-raised);
+  }
+  :where(.sst) .avatar-pick:focus-visible {
+    outline: none;
+    box-shadow: var(--sc-focus-ring);
+  }
+  :where(.sst) .avatar-copy {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  :where(.sst) .avatar-copy b {
+    font-size: 13px;
+    font-weight: 650;
+  }
+  :where(.sst) .avatar-copy span {
+    font-size: 11.5px;
+    color: var(--sc-ink-3);
+  }
+  :where(.sst) .stars {
+    display: flex;
+    gap: 2px;
+  }
+  :where(.sst) .stars button {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    display: grid;
+    place-items: center;
+    color: var(--sc-line-strong);
+    transition:
+      color var(--sc-dur-fast),
+      transform var(--sc-dur-fast) var(--sc-ease-pop);
+  }
+  :where(.sst) .stars button.on {
+    color: var(--sc-lemon-500);
+  }
+  :where(.sst) .stars button:hover {
+    transform: scale(1.12);
+  }
+  :where(.sst) .stars button:focus-visible {
+    outline: none;
+    box-shadow: var(--sc-focus-ring);
+  }
+  :where(.sst) .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 6px;
+  }
+  :where(.sst) .input.metric {
+    padding: 0 10px;
+    gap: 6px;
+  }
+  :where(.sst) .input.metric svg {
+    color: var(--sc-ink-3);
+    flex: none;
+  }
+  :where(.sst) .theme-dots {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  :where(.sst) .theme-dot {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    font: 700 13px/1 var(--sc-font-display);
+    box-shadow:
+      inset 0 0 0 1px rgba(74, 45, 20, 0.14),
+      var(--sc-shadow-raised);
+    transition: transform var(--sc-dur-fast) var(--sc-ease-pop);
+  }
+  :where(.sst) .theme-dot:hover {
+    transform: translateY(-2px);
+  }
+  :where(.sst) .theme-dot.on {
+    box-shadow: var(--sc-selected-ring);
+  }
+  :where(.sst) .theme-dot:focus-visible {
+    outline: none;
+    box-shadow: var(--sc-focus-ring);
+  }
+  :where(.sst) .accent-pick {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--sc-ink-2);
+  }
+}
+
+@layer components {
+  /* ---------- App Store board ---------- */
+  :where(.sst) .board {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+    padding-bottom: 36px;
+  }
+  :where(.sst) .board.narrow {
+    padding-bottom: 8px;
+  }
+  :where(.sst) .board-strip {
+    display: flex;
+    align-items: flex-start;
+    margin: 0 auto;
+  }
+  :where(.sst) .slide-wrap {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  :where(.sst) .slide {
+    position: relative;
+    border-radius: 14px;
+    overflow: hidden;
+    background: var(--sc-well);
+    box-shadow:
+      0 1px 2px rgba(74, 45, 20, 0.14),
+      0 14px 34px -18px rgba(74, 45, 20, 0.45);
+    transition:
+      transform var(--sc-dur-fast) var(--sc-ease-pop),
+      box-shadow var(--sc-dur-fast);
+    animation: sc-fade-in var(--sc-dur-slow) var(--sc-ease-out) both;
+  }
+  :where(.sst) .slide canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  :where(.sst) .slide:hover {
+    transform: translateY(-3px);
+  }
+  :where(.sst) .slide.on {
+    box-shadow:
+      var(--sc-selected-ring),
+      0 14px 34px -18px rgba(74, 45, 20, 0.45);
+  }
+  :where(.sst) .slide:focus-visible {
+    outline: none;
+    box-shadow: var(--sc-focus-ring);
+  }
+  :where(.sst) .slide.drop {
+    box-shadow:
+      0 0 0 3px var(--sc-accent),
+      0 14px 34px -18px rgba(74, 45, 20, 0.45);
+    transform: scale(1.02);
+  }
+  :where(.sst) .slide-empty {
+    position: absolute;
+    left: 50%;
+    bottom: 12%;
+    transform: translateX(-50%);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    padding: 7px 11px;
+    border-radius: 999px;
+    background: var(--sc-ink);
+    color: var(--sc-on-ink);
+    font-size: 12px;
+    font-weight: 650;
+    opacity: 0;
+    transition: opacity var(--sc-dur-fast);
+    pointer-events: none;
+  }
+  :where(.sst) .slide:hover .slide-empty,
+:where(.sst) .slide.on .slide-empty,
+:where(.sst) .slide.drop .slide-empty {
+    opacity: 0.92;
+  }
+  :where(.sst) .slide-num {
+    font-size: 11.5px;
+    color: var(--sc-ink-3);
+    font-weight: 500;
+  }
+  :where(.sst) .slide-add {
+    width: 100%;
+    border-radius: 14px;
+    border: 2px dashed var(--sc-line-strong);
+    color: var(--sc-ink-2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 12.5px;
+    font-weight: 650;
+    transition:
+      border-color var(--sc-dur-fast),
+      color var(--sc-dur-fast),
+      background var(--sc-dur-fast);
+  }
+  :where(.sst) .slide-add:hover {
+    border-color: var(--sc-accent);
+    color: var(--sc-accent-text);
+    background: color-mix(in srgb, var(--sc-accent) 6%, transparent);
+  }
+  :where(.sst) .slide-add:focus-visible {
+    outline: none;
+    box-shadow: var(--sc-focus-ring);
+  }
+  :where(.sst) .chip.static {
+    cursor: default;
+  }
+  :where(.sst) .chip.static:hover {
+    box-shadow: var(--sc-shadow-raised);
+  }
+
+  /* ---------- App Store inspector ---------- */
+  :where(.sst) .size-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+  :where(.sst) .size-opt {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    column-gap: 8px;
+    align-items: center;
+    text-align: left;
+    padding: 7px 10px;
+    border-radius: 12px;
+    background: var(--sc-well);
+    color: var(--sc-ink-2);
+    transition:
+      background var(--sc-dur-fast),
+      color var(--sc-dur-fast);
+  }
+  :where(.sst) .size-opt svg {
+    grid-row: 1 / 3;
+    width: 18px;
+    height: 18px;
+  }
+  :where(.sst) .size-opt b {
+    font-size: 12.5px;
+    font-weight: 650;
+    color: var(--sc-ink);
+  }
+  :where(.sst) .size-opt .mono {
+    font-size: 10.5px;
+    color: var(--sc-ink-3);
+  }
+  :where(.sst) .size-opt:hover {
+    background: var(--sc-well-hover);
+  }
+  :where(.sst) .size-opt.on {
+    background: var(--sc-accent-soft);
+    box-shadow: inset 0 0 0 2px var(--sc-accent);
+  }
+  :where(.sst) .size-opt.on svg,
+:where(.sst) .size-opt.on b {
+    color: var(--sc-accent-text);
+  }
+  :where(.sst) .size-opt:focus-visible {
+    outline: none;
+    box-shadow: var(--sc-focus-ring);
+  }
+  :where(.sst) .set-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+    margin-top: 10px;
+    align-items: center;
+  }
+  :where(.sst) .colour-pair {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-end;
+  }
+  :where(.sst) .slide-shot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  :where(.sst) .slide-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-top: 10px;
+  }
+  :where(.sst) .slide-actions .sep {
+    width: 1px;
+    height: 20px;
+    background: var(--sc-line);
+    margin: 0 6px;
+  }
+  :where(.sst) .tray-head h2 .muted {
+    font-weight: 500;
+    color: var(--sc-ink-3);
+  }
+  :where(.sst) .presets.set-styles .thumb.tall,
+:where(.sst) .rail .thumb.tall {
+    aspect-ratio: 9 / 17;
+  }
+}
+
+@layer components {
+  /* ---------- Empty state: other modes ---------- */
+  :where(.sst) .empty-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+  }
+  :where(.sst) .mode-picks {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    animation: sc-fade-in var(--sc-dur-slow) var(--sc-ease-out) 120ms both;
+  }
+  :where(.sst) .mp-label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--sc-ink-3);
+    margin-right: 4px;
+  }
+  :where(.sst) .mode-pick {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 14px 7px 7px;
+    border-radius: 16px;
+    background: var(--sc-surface);
+    box-shadow: var(--sc-shadow-raised);
+    text-align: left;
+    transition:
+      transform var(--sc-dur-fast) var(--sc-ease-pop),
+      box-shadow var(--sc-dur-fast);
+  }
+  :where(.sst) .mode-pick:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--sc-shadow-raised-hover);
+  }
+  :where(.sst) .mode-pick:active {
+    transform: translateY(1px);
+  }
+  :where(.sst) .mode-pick:focus-visible {
+    outline: none;
+    box-shadow: var(--sc-focus-ring);
+  }
+  :where(.sst) .mp-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 11px;
+    display: grid;
+    place-items: center;
+    background: var(--sc-accent-soft);
+    color: var(--sc-accent-text);
+    flex: none;
+  }
+  :where(.sst) .mp-txt {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  :where(.sst) .mp-txt b {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--sc-ink);
+    white-space: nowrap;
+  }
+  :where(.sst) .mp-txt small {
+    font-size: 11.5px;
+    color: var(--sc-ink-3);
+    white-space: nowrap;
+  }
+  :where(.sst) .mode-picks.narrow {
+    margin-top: 16px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  :where(.sst) .mode-picks.narrow .mp-label {
+    text-align: center;
+    margin: 0 0 2px;
+  }
+}

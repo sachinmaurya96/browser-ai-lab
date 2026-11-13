@@ -16,7 +16,7 @@ export const generateStaticParams = () => CATEGORIES.map((c) => ({ slug: c.slug 
 export async function generateMetadata({ params }: Props) {
   const c = getCategory((await params).slug)
   if (!c) return {}
-  return pageMetadata({ title: c.heading, description: c.description, path: `/category/${c.slug}` })
+  return pageMetadata({ title: c.heading, description: c.description, path: `/category/${c.slug}`, keywords: c.keywords })
 }
 
 export default async function CategoryPage({ params }: Props) {
@@ -37,7 +37,12 @@ export default async function CategoryPage({ params }: Props) {
 
       <ToolGrid only={c.id} />
 
-      <section className="mt-14 border-t border-rule pt-8" aria-labelledby="what">
+      <section className="mt-14 border-t border-rule pt-8" aria-labelledby="why">
+        <h2 id="why" className="font-display text-3xl">Why use these {c.label.toLowerCase()}</h2>
+        <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-ink-2">{c.about}</p>
+      </section>
+
+      <section className="mt-10 border-t border-rule pt-8" aria-labelledby="what">
         <h2 id="what" className="font-display text-3xl">What each tool does</h2>
         <dl className="mt-4 space-y-4">
           {tools.map((t) => (

@@ -4,8 +4,9 @@ import { LINKS } from '../../site'
 import { Breadcrumbs } from '../../ui/Breadcrumbs'
 
 export const metadata = pageMetadata({
-  title: 'Contact',
+  title: 'Contact: Suggest a Tool or Report a Bug',
   description: 'Suggest a new tool, report a bug or talk about collaborating on Browser AI Lab. Get in touch with the maker, Sachin Maurya.',
+  keywords: ['contact browser ai lab', 'suggest a tool', 'report a bug', 'feedback'],
   path: '/contact',
   defaultImage: true,
 })

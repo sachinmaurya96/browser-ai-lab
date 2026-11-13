@@ -1,0 +1,800 @@
+/* Editor controls added after the first design pass: export destinations,
+   Edit gradient, position grid, stage notes, hover preview, Candy Jar
+   highlight. Confectionery tokens only; editor route only (imported by
+   Editor.tsx). */
+
+@layer components {
+  /* ---------- Words in Figtree, numbers in Geist Mono (fonts.md) ---------- */
+  :where(.sst) .meta-txt {
+    font:
+      var(--sc-weight-medium) 12px/16px var(--sc-font-ui),
+      sans-serif;
+    color: var(--sc-ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+  :where(.sst) .chip .meta-txt {
+    font-weight: var(--sc-weight-medium);
+  }
+  :where(.sst) .chip.on .meta-txt,
+:where(.sst) .chip[aria-expanded="true"] .meta-txt {
+    color: inherit;
+    opacity: 0.75;
+  }
+  :where(.sst) .menu-item .meta-txt {
+    margin-left: auto;
+  }
+  :where(.sst) .tray-head .meta,
+:where(.sst) .jar-sec .meta {
+    font:
+      var(--sc-weight-medium) 12px/16px var(--sc-font-ui),
+      sans-serif;
+    color: var(--sc-ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+  :where(.sst) .tray-head .head-links {
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  /* ---------- Keycaps: readable glyphs (P2-17) ---------- */
+  :where(.sst) .kbd {
+    font-size: 11px;
+    color: var(--sc-ink-2);
+  }
+  :where(.sst) .kb-row .kbd {
+    min-width: 24px;
+    height: 24px;
+    padding: 0 6px;
+    font-size: 12px;
+    color: var(--sc-ink);
+    background: var(--sc-surface);
+    box-shadow:
+      inset 0 -2px 0 var(--sc-line-strong),
+      0 0 0 1px var(--sc-line);
+  }
+  :where(.sst) .kbd.glyph {
+    font-family: var(--sc-font-ui);
+    font-size: 13px;
+    font-weight: var(--sc-weight-semibold);
+  }
+  :where(.sst) .kb-row .kbd.glyph {
+    font-size: 14px;
+  }
+  :where(.sst) .dialog-body {
+    min-height: 0;
+  }
+
+  /* ---------- Preset tiles: single-line names, a check on the chosen one ---------- */
+  :where(.sst) .preset .name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  :where(.sst) .sel-check {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--sc-accent-fill);
+    color: #fff;
+    box-shadow: 0 1px 3px rgba(74, 45, 20, 0.3);
+    animation: sc-pop-in var(--sc-dur-fast) var(--sc-ease-pop);
+  }
+
+  /* ---------- Frame tiles with labels (P2-16) ---------- */
+  :where(.sst) .tile.labelled {
+    aspect-ratio: auto;
+    height: 58px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+  }
+  :where(.sst) .tile .tile-label {
+    font-size: 10.5px;
+    line-height: 12px;
+    font-weight: var(--sc-weight-semibold);
+  }
+  :where(.sst) .tile.labelled svg {
+    width: 24px;
+    height: 20px;
+  }
+  /* The compact inspector (300 px) leaves ~37 px per tile: long labels
+     ("Cascade", "Browser") get a size that keeps clear of the edges. */
+  @container sst (min-width: 768px) and (max-width: 1279px) {
+    :where(.sst) .frames:has(.tile.labelled) {
+      gap: 3px;
+    }
+    :where(.sst) .tile .tile-label {
+      font-size: 9px;
+      letter-spacing: -0.02em;
+    }
+  }
+  :where(.sst) .theme-seg button {
+    gap: 5px;
+  }
+
+  /* ---------- Candy Jar ---------- */
+  :where(.sst) .jar-card.hl .th {
+    outline: 2px solid var(--sc-ink);
+    outline-offset: 3px;
+    transform: translateY(-4px) scale(1.015);
+  }
+  :where(.sst) .jar-card.hl .apply {
+    opacity: 1;
+  }
+  :where(.sst) .save-chip {
+    flex: none;
+  }
+  :where(.sst) .jar-foot .kbd + .kbd {
+    margin-left: -2px;
+  }
+
+  /* ---------- Export: destinations, summary, limits ---------- */
+  :where(.sst) .dest-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  :where(.sst) .dest-chips .chip {
+    height: 30px;
+    padding: 0 11px;
+    font-size: 12.5px;
+  }
+  :where(.sst) .export-summary {
+    margin-top: 12px;
+    background: var(--sc-well);
+    border-radius: 14px;
+    padding: 10px 12px;
+    box-shadow: var(--sc-shadow-well);
+    display: grid;
+    gap: 6px;
+  }
+  :where(.sst) .export-summary .dims {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  :where(.sst) .export-summary .dims .mono:first-child {
+    font-size: 14px;
+    font-weight: var(--sc-weight-medium);
+    color: var(--sc-ink);
+  }
+  :where(.sst) .export-summary .fmt {
+    font-size: 11px;
+    font-weight: var(--sc-weight-bold);
+    color: var(--sc-ink-2);
+    background: var(--sc-surface);
+    padding: 2px 6px;
+    border-radius: 6px;
+  }
+  :where(.sst) .export-summary .est {
+    margin-left: auto;
+    color: var(--sc-ink-2);
+  }
+  :where(.sst) .export-summary .why {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 20px;
+  }
+  :where(.sst) .export-summary .blurb {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--sc-ink-3);
+  }
+  :where(.sst) .fit-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: var(--sc-weight-semibold);
+    line-height: 16px;
+    border-radius: 8px;
+    padding: 2px 8px 2px 6px;
+  }
+  /* Text mixed a quarter of the way to ink: AA on the soft fills in both themes. */
+  :where(.sst) .fit-badge.fits {
+    color: color-mix(in srgb, var(--sc-success) 72%, var(--sc-ink));
+    background: var(--sc-success-soft);
+  }
+  :where(.sst) .fit-badge.switch,
+:where(.sst) .fit-badge.over {
+    color: color-mix(in srgb, var(--sc-warning) 72%, var(--sc-ink));
+    background: var(--sc-warning-soft);
+  }
+  :where(.sst) .quality-line {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 12px;
+    font-size: 12px;
+    font-weight: var(--sc-weight-semibold);
+    color: var(--sc-ink-2);
+  }
+  :where(.sst) .quality-line span {
+    font-weight: var(--sc-weight-medium);
+    color: var(--sc-ink-3);
+  }
+  :where(.sst) .export-panel .toggle-row .label small,
+:where(.sst) .position .side-note {
+    display: block;
+    font-size: 11.5px;
+    line-height: 15px;
+    font-weight: var(--sc-weight-medium);
+    color: var(--sc-ink-3);
+  }
+  :where(.sst) .export-panel .toggle-row {
+    margin-top: 8px;
+  }
+
+  /* ---------- Position: 3x3 grid, fit, bleed ---------- */
+  :where(.sst) .position-row {
+    display: grid;
+    grid-template-columns: 78px 1fr;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  :where(.sst) .pos-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3px;
+    padding: 4px;
+    background: var(--sc-well);
+    border-radius: 12px;
+    box-shadow: var(--sc-shadow-well);
+    width: 78px;
+    height: 62px;
+  }
+  :where(.sst) .pos-cell {
+    border-radius: 6px;
+    display: grid;
+    place-items: center;
+    transition: background var(--sc-dur-fast);
+  }
+  :where(.sst) .pos-cell i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--sc-ink-4);
+    transition:
+      transform var(--sc-dur-fast) var(--sc-ease-pop),
+      background var(--sc-dur-fast);
+  }
+  :where(.sst) .pos-cell:hover {
+    background: var(--sc-well-hover);
+  }
+  :where(.sst) .pos-cell:hover i {
+    background: var(--sc-ink-2);
+  }
+  :where(.sst) .pos-cell.on {
+    background: var(--sc-surface);
+    box-shadow:
+      0 1px 2px rgba(74, 45, 20, 0.14),
+      inset 0 -1.5px 0 rgba(74, 45, 20, 0.07);
+  }
+  :where(.sst) .pos-cell.on i {
+    width: 14px;
+    height: 10px;
+    border-radius: 3px;
+    background: var(--sc-accent);
+  }
+  :where(.sst) .position-side {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+  }
+  :where(.sst) .position-side .side-label {
+    font-size: 12px;
+    font-weight: var(--sc-weight-semibold);
+    color: var(--sc-ink-2);
+  }
+  :where(.sst) .position-side .seg button {
+    padding: 0 6px;
+  }
+
+  /* ---------- Edit gradient ---------- */
+  :where(.sst) .grad-edit {
+    margin-top: 12px;
+    display: grid;
+    gap: 12px;
+  }
+  :where(.sst) .grad-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  :where(.sst) .grad-main {
+    flex: 1;
+    min-width: 0;
+    display: grid;
+    gap: 8px;
+  }
+  :where(.sst) .angle-dial-wrap {
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    flex: none;
+  }
+  :where(.sst) .angle-dial {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--sc-well);
+    box-shadow: var(--sc-shadow-well);
+    cursor: grab;
+    touch-action: none;
+    outline: none;
+  }
+  :where(.sst) .angle-dial:active {
+    cursor: grabbing;
+  }
+  :where(.sst) .angle-dial:focus-visible {
+    box-shadow: var(--sc-shadow-well), var(--sc-focus-ring);
+  }
+  :where(.sst) .angle-dial svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  :where(.sst) .angle-dial .tick {
+    fill: var(--sc-ink-4);
+  }
+  :where(.sst) .angle-dial .tick.on {
+    fill: var(--sc-accent);
+  }
+  :where(.sst) .angle-dial .hand {
+    stroke: var(--sc-ink-3);
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+  :where(.sst) .angle-dial .knob {
+    fill: var(--sc-accent);
+    stroke: var(--sc-surface);
+    stroke-width: 2;
+  }
+  :where(.sst) .angle-dial .hub {
+    fill: var(--sc-ink-3);
+  }
+  :where(.sst) .angle-val {
+    color: var(--sc-ink-2);
+  }
+  :where(.sst) .stop-bar {
+    position: relative;
+    height: 26px;
+    border-radius: 9px;
+    margin: 0 10px;
+    box-shadow:
+      inset 0 0 0 1px rgba(0, 0, 0, 0.08),
+      var(--sc-shadow-raised);
+  }
+  :where(.sst) .stop-bar .stop {
+    position: absolute;
+    top: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border-radius: 50%;
+    box-shadow:
+      0 0 0 2.5px #fff,
+      0 1px 4px 2px rgba(42, 31, 26, 0.3);
+    cursor: ew-resize;
+    touch-action: none;
+    transition: transform var(--sc-dur-fast) var(--sc-ease-pop);
+  }
+  :where(.sst) .stop-bar .stop.on {
+    transform: scale(1.14);
+    box-shadow:
+      0 0 0 2.5px #fff,
+      0 0 0 5px var(--sc-accent),
+      0 2px 6px 2px rgba(42, 31, 26, 0.3);
+  }
+  :where(.sst) .mesh-chips {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  :where(.sst) .mesh-chips .btn {
+    margin-left: auto;
+  }
+  :where(.sst) .stop-chip {
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+    box-shadow: var(--sc-shadow-swatch);
+    transition: transform var(--sc-dur-fast) var(--sc-ease-pop);
+  }
+  :where(.sst) .stop-chip:hover {
+    transform: translateY(-1px);
+  }
+  :where(.sst) .stop-chip.on {
+    box-shadow: var(--sc-selected-ring), var(--sc-shadow-swatch);
+  }
+  :where(.sst) .stop-tools {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  :where(.sst) .stop-tools .stop-label {
+    flex: 1;
+    font-size: 12px;
+    font-weight: var(--sc-weight-semibold);
+    color: var(--sc-ink-2);
+  }
+  :where(.sst) .stop-tools .stop-label .mono {
+    color: var(--sc-ink-3);
+    margin-left: 2px;
+  }
+  :where(.sst) .grad-suggest {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  :where(.sst) .grad-suggest > span {
+    font-size: 12px;
+    font-weight: var(--sc-weight-semibold);
+    color: var(--sc-ink-2);
+    margin-right: 2px;
+  }
+  :where(.sst) .grad-suggest .sw.sm {
+    width: 22px;
+    height: 22px;
+  }
+  :where(.sst) .grad-actions:empty {
+    display: none;
+  }
+
+  /* ---------- Stage: notes, preview pill, code lines ---------- */
+  /* Bottom-left, above the dock's row: clear of the size tag over the canvas
+     (REVIEW r2 N10), of the dock and zoom, and of a fitted canvas. */
+  :where(.sst) .stage-notes {
+    position: absolute;
+    bottom: calc(var(--sc-space-6) + 52px + 12px);
+    left: 16px;
+    z-index: 8;
+    display: grid;
+    gap: 6px;
+    justify-items: start;
+    max-width: min(560px, calc(100% - 32px));
+    pointer-events: none;
+  }
+  :where(.sst) .stage.has-timeline .stage-notes {
+    bottom: calc(var(--sc-space-6) + 52px + 12px + 50px + 12px);
+  }
+  :where(.sst) .stage-notes.narrow {
+    bottom: auto;
+    top: 8px;
+    left: 8px;
+    max-width: calc(100% - 16px);
+  }
+  :where(.sst) .stage-note {
+    pointer-events: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 6px 5px 11px;
+    border-radius: var(--sc-radius-pill);
+    background: var(--sc-surface);
+    box-shadow: var(--sc-shadow-float);
+    font-size: 12.5px;
+    font-weight: var(--sc-weight-semibold);
+    color: var(--sc-ink-2);
+    white-space: nowrap;
+    animation: sc-rise var(--sc-dur-base) var(--sc-ease-out) both;
+  }
+  :where(.sst) .stage-note > svg {
+    color: var(--sc-accent-text);
+  }
+  :where(.sst) .stage-note > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  :where(.sst) .stage-note .note-act {
+    height: 26px;
+    padding: 0 10px;
+    border-radius: var(--sc-radius-pill);
+    background: var(--sc-well);
+    color: var(--sc-ink);
+    font-size: 12px;
+    font-weight: var(--sc-weight-bold);
+    transition: background var(--sc-dur-fast);
+  }
+  :where(.sst) .stage-note .note-act:hover {
+    background: var(--sc-well-hover);
+  }
+  :where(.sst) .stage-note .note-x {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    color: var(--sc-ink-3);
+  }
+  :where(.sst) .stage-note .note-x:hover {
+    background: var(--sc-well);
+    color: var(--sc-ink);
+  }
+  :where(.sst) .stage-note .note-act:focus-visible,
+:where(.sst) .stage-note .note-x:focus-visible {
+    outline: none;
+    box-shadow: var(--sc-focus-ring);
+  }
+  @container sst (max-width: 767px) {
+    :where(.sst) .stage-note {
+      white-space: normal;
+      font-size: 12px;
+      line-height: 16px;
+      border-radius: 16px;
+      padding: 6px 6px 6px 11px;
+    }
+    :where(.sst) .stage-note .note-act {
+      white-space: nowrap;
+      flex: none;
+    }
+  }
+  :where(.sst) .m-quick-colours {
+    padding: 0 16px 8px;
+  }
+  :where(.sst) .m-quick-colours .ann-colours {
+    padding: 4px 4px 2px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  :where(.sst) .rail .shuffle-tile .thumb {
+    display: grid;
+    place-items: center;
+    color: var(--sc-accent-text);
+    background: var(--sc-accent-soft);
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--sc-accent) 35%, transparent);
+  }
+  :where(.sst) .rail .shuffle-tile .thumb svg {
+    width: 26px;
+    height: 26px;
+  }
+  :where(.sst) .preview-pill {
+    position: absolute;
+    top: 14px;
+    left: 18px;
+    z-index: 9;
+    padding: 5px 11px;
+    border-radius: var(--sc-radius-pill);
+    background: var(--sc-ink);
+    color: var(--sc-on-ink);
+    font-size: 12px;
+    font-weight: var(--sc-weight-bold);
+    pointer-events: none;
+    animation: sc-fade-in var(--sc-dur-fast) var(--sc-ease-out);
+  }
+  :where(.sst) .code-lines {
+    position: absolute;
+    z-index: 5;
+  }
+  :where(.sst) .code-line-hover {
+    position: absolute;
+    background: color-mix(in srgb, var(--sc-accent) 14%, transparent);
+    box-shadow: inset 3px 0 0 var(--sc-accent);
+    pointer-events: none;
+    border-radius: 2px;
+  }
+  :where(.sst) .code-line-hover.on {
+    background: color-mix(in srgb, var(--sc-ink) 10%, transparent);
+    box-shadow: inset 3px 0 0 var(--sc-ink-3);
+  }
+  :where(.sst) .code-line-tip {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 2px 8px;
+    border-radius: 7px;
+    background: var(--sc-ink);
+    color: var(--sc-on-ink);
+    font-size: 11px;
+    font-weight: var(--sc-weight-bold);
+    white-space: nowrap;
+  }
+
+  /* ---------- Toasts: top-right corner of the stage, in the band above a
+     fitted canvas. Never wider than the stage's right half (so they clear
+     the centred size tag), never over the inspector (REVIEW r3). ---------- */
+  @container sst (min-width: 768px) {
+    :where(.sst) .stage .toast-layer,
+:where(.sst) .stage.has-timeline .toast-layer {
+      position: absolute;
+      top: 6px;
+      bottom: auto;
+      left: auto;
+      right: 14px;
+      transform: none;
+      align-items: flex-end;
+      max-width: calc(50% - 90px);
+      width: max-content;
+    }
+    /* Compact enough (52 px) for the band above a fitted canvas; long lines
+       ellipsize here (screen readers still get the whole message). */
+    :where(.sst) .stage .toast-layer .toast {
+      max-width: 100%;
+      min-height: 0;
+      padding-top: 6px;
+      padding-bottom: 6px;
+    }
+    :where(.sst) .stage .toast-layer .toast > div {
+      min-width: 0;
+    }
+    :where(.sst) .stage .toast-layer .toast .t1,
+:where(.sst) .stage .toast-layer .toast .t2 {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    :where(.sst) .stage .toast-layer .wrap-thumb {
+      height: 40px;
+      width: 88px;
+    }
+    :where(.sst) .stage .toast-layer .wrap-thumb svg {
+      top: 0;
+    }
+  }
+
+  /* An unselected blur shows its outline only while the Select tool hovers it (P2-26). */
+  :where(.sst) .ann-layer .outline.idle {
+    display: none;
+  }
+  :where(.sst) .ann-layer g:hover > .outline.idle {
+    display: inline;
+    opacity: 0.5;
+  }
+
+  /* Motion pads with nothing to act on (Draw on without annotations, Scroll on a short page). */
+  :where(.sst) .mtile.weak:not(.on) .mthumb {
+    opacity: 0.45;
+    filter: saturate(0.4);
+  }
+  :where(.sst) .mtile.weak:not(.on) .name {
+    color: var(--sc-ink-3);
+  }
+  :where(.sst) .motion-fit {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    margin: -4px 2px 12px;
+  }
+
+  /* App Store guards */
+  :where(.sst) .slide-guard .guard-acts,
+:where(.sst) .motion-fit .guard-acts {
+    display: inline-flex;
+    gap: 12px;
+    margin-left: 2px;
+  }
+  :where(.sst) .slide-guard .guard-acts,
+:where(.sst) .draw-hint .guard-acts {
+    display: flex;
+    margin-top: 4px;
+  }
+  :where(.sst) .warn-note .link {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    font-weight: var(--sc-weight-bold);
+  }
+  :where(.sst) .warn-text {
+    color: var(--sc-warning);
+  }
+  :where(.sst) .set-empty .set-empty-seg {
+    margin-top: 6px;
+  }
+  :where(.sst) .slide-warn {
+    position: absolute;
+    left: 50%;
+    bottom: 8px;
+    transform: translateX(-50%);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: var(--sc-warning-soft);
+    color: color-mix(in srgb, var(--sc-warning) 72%, var(--sc-ink));
+    font-size: 11px;
+    font-weight: var(--sc-weight-bold);
+    box-shadow: 0 1px 3px rgba(42, 31, 26, 0.18);
+  }
+
+  /* Mode tabs: a label tooltip under icon-only tabs (REVIEW r2 N25). */
+  :where(.sst) .mode-switch .has-tip {
+    position: relative;
+  }
+  :where(.sst) .mode-switch .mode-tip {
+    top: calc(100% + 8px);
+    bottom: auto;
+    font-weight: var(--sc-weight-medium);
+    z-index: var(--sc-z-popover);
+  }
+  :where(.sst) .mode-switch .mode-tip b {
+    font-weight: var(--sc-weight-bold);
+  }
+  :where(.sst) .mode-switch button.on .mode-tip {
+    display: none;
+  }
+  /* The current style's tile doesn't offer "Apply" (REVIEW r2 N18). */
+  :where(.sst) .jar-card.on .apply {
+    display: none;
+  }
+  /* The App Store set chip is information, not a control (REVIEW r2 N19). */
+  :where(.sst) .chip.static {
+    background: transparent;
+    box-shadow: none;
+  }
+  :where(.sst) .chip.static:hover {
+    box-shadow: none;
+  }
+
+  /* Caption card: controls in the Layout tray, and on-stage editing. */
+  :where(.sst) .caption-controls {
+    margin-top: 6px;
+  }
+  :where(.sst) .caption-controls .toggle-row .label small {
+    display: block;
+    font-size: 11.5px;
+    line-height: 15px;
+    font-weight: var(--sc-weight-medium);
+    color: var(--sc-ink-3);
+  }
+  :where(.sst) .caption-fields {
+    display: grid;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  :where(.sst) .caption-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 8px;
+    align-items: center;
+  }
+  :where(.sst) .colour-dot.auto {
+    background: conic-gradient(#2a1f1a 0 50%, #ffffff 0) !important;
+  }
+  :where(.sst) .caption-hit {
+    position: absolute;
+    z-index: 6;
+    border-radius: 12px;
+    cursor: text;
+    background: transparent;
+    transition: box-shadow var(--sc-dur-fast);
+  }
+  :where(.sst) .caption-hit:hover {
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--sc-accent) 65%, transparent);
+  }
+  :where(.sst) .caption-hit:focus-visible {
+    outline: 2px solid var(--sc-ink);
+    outline-offset: 2px;
+  }
+  :where(.sst) .caption-editor {
+    position: absolute;
+    z-index: 9;
+    padding: 6px;
+    border: 0;
+    border-radius: 12px;
+    resize: none;
+    overflow: hidden;
+    color: var(--sc-ink);
+    background: color-mix(in srgb, var(--sc-surface) 94%, transparent);
+    box-shadow:
+      var(--sc-shadow-float),
+      0 0 0 2px var(--sc-accent);
+    outline: none;
+  }
+}

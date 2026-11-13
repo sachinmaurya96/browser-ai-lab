@@ -5,6 +5,7 @@ import { Breadcrumbs } from '../../ui/Breadcrumbs'
 export const metadata = pageMetadata({
   title: 'Terms of Service',
   description: 'The terms for using Browser AI Lab: free tools provided as-is, your responsibility for the content you process, and the licences of the AI models used.',
+  keywords: ['browser ai lab terms of service', 'ai model licences'],
   path: '/terms',
   defaultImage: true,
 })

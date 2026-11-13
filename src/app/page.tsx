@@ -14,6 +14,7 @@ export const metadata = pageMetadata({
   absoluteTitle: true,
   description: SITE_DESCRIPTION,
   path: '/',
+  keywords: ['free ai tools', 'free online tools no sign up', 'private ai tools', 'browser ai tools', 'ai tools no upload', 'pdf tools', 'background remover', 'vocal remover', 'speech to text', 'screenshot beautifier'],
 })
 
 export default function Home() {

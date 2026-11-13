@@ -9,6 +9,7 @@ import { Breadcrumbs } from '../../ui/Breadcrumbs'
 export const metadata = pageMetadata({
   title: `All ${TOOLS.length} Free AI and Utility Tools`,
   description: `A directory of all ${TOOLS.length} Browser AI Lab tools: PDF, image, audio, text, social media and developer tools that run privately in your browser.`,
+  keywords: ['free online tools', 'ai tools list', 'free ai tools no sign up', 'pdf tools', 'image tools', 'audio tools', 'developer tools online'],
   path: '/tools',
   defaultImage: true,
 })

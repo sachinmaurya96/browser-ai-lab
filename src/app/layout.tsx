@@ -37,7 +37,7 @@ export const viewport: Viewport = {
 }
 
 // Apply the saved theme before first paint to avoid a flash.
-const THEME_SCRIPT = `try{var t=localStorage.getItem('lab-theme');if(t==='dark'||t==='light')document.documentElement.dataset.theme=t}catch(e){}`
+const THEME_SCRIPT = `try{var t=localStorage.getItem('lab-theme');if(t==='dark'||t==='light')document.documentElement.dataset.theme=t;if(localStorage.getItem('lab-sidebar')==='collapsed')document.documentElement.dataset.sidebar='collapsed'}catch(e){}`
 
 // The old site used hash routes (/#/cutout). Fragments never reach the server,
 // so map them here, before paint, to the new permanent URLs.

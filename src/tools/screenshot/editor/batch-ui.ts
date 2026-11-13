@@ -1,0 +1,50 @@
+"use client";
+/** Small shared pieces of the batch UI (hooks, sizes, labels). */
+import { type Batch, isBatch } from "../engine/batch/batch";
+import { type OverrideGroup, GROUP_LABELS } from "../engine/batch/style";
+import { useStore } from "../lib/store";
+import type { BatchUi } from "./batch";
+import { useApp, useScene, useUi } from "./context";
+
+/** Width of the collapsed images rail. */
+export const RAIL_COLLAPSED = 52;
+
+/** The open batch (screenshot mode), or null. */
+export function useBatch(): Batch | null {
+  const doc = useScene((s) => s.doc);
+  const mode = useUi((s) => s.mode);
+  return mode === "screenshot" && isBatch(doc) ? doc : null;
+}
+
+export function useBatchUi<T>(selector: (s: BatchUi) => T): T {
+  return useStore(useApp().batch.ui, selector);
+}
+
+/** Frames narrower than this start with the rail collapsed (the stage needs the room). */
+const COMPACT_FRAME = 1200;
+
+/** The rail starts collapsed in smaller editor frames (the stage needs the room). */
+export function useRailCollapsed(): boolean {
+  const pref = useBatchUi((s) => s.railCollapsed);
+  const compact = useUi((s) => s.frameWidth > 0 && s.frameWidth < COMPACT_FRAME);
+  return pref ?? compact;
+}
+
+/** "Own background, layout" for a thumbnail's tooltip. */
+export function groupsText(groups: readonly OverrideGroup[]): string {
+  if (!groups.length) return "";
+  const names = groups.map((g) => GROUP_LABELS[g].toLowerCase());
+  return `Own ${names.join(", ")}`;
+}
+
+/** "login.png" -> "login.png"; long names keep their distinguishing end. */
+export function middleTruncate(name: string, max = 28): string {
+  if (name.length <= max) return name;
+  const keep = max - 1;
+  const head = Math.ceil(keep * 0.55);
+  return `${name.slice(0, head)}…${name.slice(name.length - (keep - head))}`;
+}
+
+export const isMac = () =>
+  typeof navigator !== "undefined" &&
+  /mac|iphone|ipad/i.test(navigator.platform || navigator.userAgent);

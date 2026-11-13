@@ -2,7 +2,7 @@ import {
   AlignLeft, AudioLines, Box, Camera, Code2, Copy, FileText, FolderTree, HeartPulse, Languages, Layers3, Maximize2,
   MessageCircleQuestion, Combine, SplitSquareHorizontal, LayoutGrid, FileImage, Images, FileType, Stamp, Minimize2, FileSearch, FileScan, Mic2, MessagesSquare, Mic, PenLine, ScanLine, ScanText, Scissors, ShieldAlert, ShieldCheck, Tags,
   Telescope, AudioWaveform, Music4, Type, Crop, Braces, KeyRound, Binary, Fingerprint, Dices, Regex, GitCompare, Clock, Palette, Sheet, QrCode, ImageDown,
-  Image as ImageIcon, TextQuote, Share2, Terminal, type LucideIcon,
+  Image as ImageIcon, TextQuote, Share2, Terminal, WandSparkles, type LucideIcon,
 } from 'lucide-react'
 import { ACTIVE_TOOLS } from './tools/slugs'
 
@@ -20,15 +20,19 @@ export interface CategoryInfo {
   heading: string
   /** Meta description and intro for the category page. */
   description: string
+  /** Search phrases for the category page's keywords meta. */
+  keywords: string[]
+  /** A short paragraph on why these tools are worth using, below the grid. */
+  about: string
 }
 
 export const CATEGORIES: CategoryInfo[] = [
-  { id: 'PDF', label: 'PDF Tools', icon: FileText, slug: 'pdf', blurb: 'Edit, convert and read PDFs, privately', heading: 'Free PDF Tools That Never Upload Your Files', description: 'Merge, split, reorder, watermark and convert PDFs in your browser, and read text from scanned pages. Your files never leave your device.' },
-  { id: 'Image', label: 'Image Tools', icon: ImageIcon, slug: 'image', blurb: 'Clean up, enlarge and shrink images', heading: 'Free Image Tools in Your Browser', description: 'Remove backgrounds, enlarge small images, copy text out of screenshots and compress images for the web, all on your own device.' },
-  { id: 'Audio', label: 'Audio Tools', icon: AudioLines, slug: 'audio', blurb: 'Transcribe speech, split songs, make voiceovers', heading: 'Free Audio Tools in Your Browser', description: 'Turn recordings into text and subtitles, separate songs into vocals and instruments, and turn text into natural-sounding speech. Audio is processed locally.' },
-  { id: 'Text', label: 'Text Tools', icon: TextQuote, slug: 'text', blurb: 'Translate and summarize text', heading: 'Free Text Tools That Run Offline', description: 'Translate between 200 languages and condense long articles into the key points, without sending your text to a server.' },
-  { id: 'Social', label: 'Social Media Tools', icon: Share2, slug: 'social-media', blurb: 'Style text and size images for social media', heading: 'Free Social Media Tools', description: 'Format bold and italic text for LinkedIn and X, and resize one image to every social platform size at once. Runs in your browser, nothing is uploaded.' },
-  { id: 'Developer', label: 'Developer Tools', icon: Terminal, slug: 'dev-utilities', blurb: 'Everyday helpers, no download', heading: 'Free Online Developer Tools', description: 'Format JSON, decode JWTs, test regex, diff text, convert CSV and JSON, and make QR codes, instantly and locally.' },
+  { id: 'PDF', label: 'PDF Tools', icon: FileText, slug: 'pdf', blurb: 'Edit, convert and read PDFs, privately', heading: 'Free PDF Tools That Never Upload Your Files', description: 'Merge, split, reorder, watermark and convert PDFs in your browser, and read text from scanned pages. Your files never leave your device.', keywords: ["pdf tools", "free pdf tools online", "pdf editor no upload", "merge split pdf", "pdf converter free", "pdf tools no sign up"], about: "Most online PDF sites upload your file to a server first. These tools open the PDF inside your browser with pdf.js and pdf-lib, so contracts, IDs and bank statements never leave your device. There is no sign-up, no watermark and no daily limit." },
+  { id: 'Image', label: 'Image Tools', icon: ImageIcon, slug: 'image', blurb: 'Clean up, enlarge and shrink images', heading: 'Free Image Tools in Your Browser', description: 'Remove backgrounds, enlarge small images, make screenshot mockups, copy text out of screenshots and compress images, all on your own device.', keywords: ["free image tools", "ai image tools online", "background remover", "image compressor", "screenshot beautifier", "image to text"], about: "Every image tool here runs on your own device: the AI models download once and then work in the browser, so photos are never uploaded. Results download straight away with no watermark and no account." },
+  { id: 'Audio', label: 'Audio Tools', icon: AudioLines, slug: 'audio', blurb: 'Transcribe speech, split songs, make voiceovers', heading: 'Free Audio Tools in Your Browser', description: 'Turn recordings into text and subtitles, separate songs into vocals and instruments, and turn text into natural-sounding speech. Audio is processed locally.', keywords: ["free audio tools", "ai audio tools online", "vocal remover", "speech to text free", "text to speech free", "subtitle generator"], about: "Audio is processed by AI models running in your browser, so songs, interviews and voice notes stay on your device. The first visit downloads the model, after which the tool works without uploading anything." },
+  { id: 'Text', label: 'Text Tools', icon: TextQuote, slug: 'text', blurb: 'Translate and summarize text', heading: 'Free Text Tools That Run Offline', description: 'Translate between 200 languages and condense long articles into the key points, without sending your text to a server.', keywords: ["free ai text tools", "ai translator", "text summarizer", "offline translator", "private ai tools", "summarize text free"], about: "Translation and summarizing run on AI models inside your browser, so private messages, contracts and notes are never sent to a server. After the first model download, the tools keep working offline." },
+  { id: 'Social', label: 'Social Media Tools', icon: Share2, slug: 'social-media', blurb: 'Style text and size images for social media', heading: 'Free Social Media Tools', description: 'Format bold and italic text for LinkedIn and X, and resize one image to every social platform size at once. Runs in your browser, nothing is uploaded.', keywords: ["social media tools", "bold text generator", "social media image resizer", "linkedin post formatting", "instagram image size", "free social media tools"], about: "Format LinkedIn and X posts with bold and italic Unicode text, and export one image at every platform size from a single upload. Both tools run instantly in your browser with no account." },
+  { id: 'Developer', label: 'Developer Tools', icon: Terminal, slug: 'dev-utilities', blurb: 'Everyday helpers, no download', heading: 'Free Online Developer Tools', description: 'Format JSON, decode JWTs, test regex, diff text, convert CSV and JSON, and make QR codes, instantly and locally.', keywords: ["developer tools online", "json formatter", "jwt decoder", "regex tester", "diff checker", "csv to json", "qr code generator"], about: "These utilities run entirely in the browser, which matters for developer data: API responses, tokens and logs are never sent anywhere. They load instantly with no model download." },
 ]
 
 export const getTool = (slug: string) => TOOLS.find((t) => t.slug === slug)
@@ -77,6 +81,7 @@ const ALL_TOOLS: Tool[] = [
   { slug: 'depth-map-generator', legacy: 'depth', name: 'Depth Map', tagline: '3D depth estimation', category: 'Image', icon: Layers3, stack: ['Depth Anything V2'], blurb: 'Estimate how far away everything in a photo is.' },
   { slug: 'visual-question-answering', legacy: 'look', name: 'Look & Ask', tagline: 'Webcam Q&A', category: 'Image', icon: Camera, stack: ['LFM2.5-VL'], blurb: 'Freeze a camera frame and ask a vision model questions about it.' },
   { slug: 'image-optimizer', legacy: 'img-optimize', name: 'Image Optimizer', tagline: 'Compress & convert to WebP', category: 'Image', icon: ImageDown, stack: ['local'], blurb: 'Batch resize and compress images to WebP, JPG or PNG, and strip metadata.' },
+  { slug: 'screenshot-beautifier', legacy: 'screenshot-studio', name: 'Screenshot Studio', tagline: 'Beautify screenshots', category: 'Image', icon: WandSparkles, stack: ['canvas'], blurb: 'Put screenshots on gradients and wallpapers, in window and device frames, with shadows, tilt and motion.' },
 
   // Audio
   { slug: 'speech-to-text', legacy: 'transcribe', name: 'Speech to Text', tagline: 'Transcripts & subtitles', category: 'Audio', icon: Mic, stack: ['Whisper'], blurb: 'Turn recordings and videos into text, or SRT/VTT subtitles, in 99 languages.' },
@@ -119,6 +124,9 @@ const ALL_TOOLS: Tool[] = [
 
 /** The public catalog (see ACTIVE_TOOLS). Everything user-facing reads this. */
 export const TOOLS: Tool[] = ALL_TOOLS.filter((t) => ACTIVE_TOOLS.has(t.slug))
+
+/** Always shown at the top of the sidebar (no accordion), in this order. */
+export const POPULAR = ['screenshot-beautifier', 'background-remover', 'merge-pdf', 'text-to-speech']
 
 /** Featured on the home page, in this order. */
 export const FEATURED = ['merge-pdf', 'background-remover', 'speech-to-text', 'images-to-pdf', 'vocal-remover', 'json-formatter']

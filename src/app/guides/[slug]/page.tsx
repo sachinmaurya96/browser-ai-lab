@@ -4,7 +4,7 @@ import { GUIDES, getGuide } from '../../../content/guides'
 import { TOOL_CONTENT } from '../../../content/tools'
 import { JsonLd, article } from '../../../seo/jsonld'
 import { pageMetadata } from '../../../seo/metadata'
-import { AUTHOR } from '../../../site'
+import { AUTHOR, SITE_NAME } from '../../../site'
 import { getTool } from '../../../tools'
 import { toolPath } from '../../../tools/slugs'
 import { Breadcrumbs } from '../../../ui/Breadcrumbs'
@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: Props) {
   const g = getGuide((await params).slug)
   if (!g) return {}
   // Long headlines skip the site-name suffix so the title isn't truncated in results.
-  const meta = pageMetadata({ title: g.title, description: g.description, path: `/guides/${g.slug}`, type: 'article', absoluteTitle: g.title.length > 48 })
+  const meta = pageMetadata({ title: g.title, description: g.description, path: `/guides/${g.slug}`, type: 'article', keywords: g.keywords, absoluteTitle: g.title.length + ` | ${SITE_NAME}`.length > 60 })
   return { ...meta, openGraph: { ...meta.openGraph, type: 'article', publishedTime: g.published, modifiedTime: g.modified, authors: [AUTHOR.name] } }
 }
 

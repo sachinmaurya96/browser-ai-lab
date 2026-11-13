@@ -1,0 +1,213 @@
+<!doctype html>
+<meta charset="utf-8" />
+<canvas id="c"></canvas>
+<script>
+const FRAG = `#version 300 es
+precision highp float;
+uniform vec2 uRes;
+uniform int uKind;
+uniform vec3 uC[6];
+uniform int uN;
+uniform float uSeed;
+uniform vec4 uP;
+out vec4 o;
+
+float hash(vec2 p){ p = fract(p*vec2(123.34,456.21) + uSeed*0.1373); p += dot(p, p+45.32); return fract(p.x*p.y); }
+vec2 grad(vec2 i){ float a = hash(i)*6.2831853; return vec2(cos(a), sin(a)); }
+float gnoise(vec2 p){
+  vec2 i = floor(p), f = fract(p);
+  vec2 u = f*f*f*(f*(f*6.-15.)+10.);
+  return mix(mix(dot(grad(i),f), dot(grad(i+vec2(1,0)),f-vec2(1,0)),u.x),
+             mix(dot(grad(i+vec2(0,1)),f-vec2(0,1)), dot(grad(i+vec2(1,1)),f-vec2(1,1)),u.x),u.y);
+}
+float fbm(vec2 p, int oct){
+  float s = 0., a = .5;
+  for (int i = 0; i < 9; i++) { if (i >= oct) break; s += a*gnoise(p); p = mat2(1.6,1.2,-1.2,1.6)*p + vec2(3.1,1.7); a *= .5; }
+  return s;
+}
+vec3 ramp(float t){
+  t = clamp(t, 0., 1.) * float(uN-1);
+  int i = int(floor(t)); float f = fract(t);
+  vec3 a = uC[0], b = uC[0];
+  for (int k = 0; k < 6; k++) { if (k == i) a = uC[k]; if (k == min(i+1, uN-1)) b = uC[k]; }
+  return mix(a, b, smoothstep(0., 1., f));
+}
+float rnd(float k){ return hash(vec2(k*7.13, k*3.71+1.9)); }
+
+vec3 silk(vec2 p){
+  vec3 col = mix(uC[0]*0.8, uC[0]*1.15, smoothstep(-0.5, 0.5, p.y));
+  for (int L = 0; L < 5; L++) {
+    if (L >= uN-1) break;
+    float fl = float(L);
+    float base = 0.32 - fl*(0.75/float(uN-1));
+    float y = base + 0.13*sin(p.x*(1.5+fl*0.3) + fl*1.9 + uSeed)
+                   + 0.05*sin(p.x*3.3 - fl*2.1 + uSeed*1.7)
+                   + 0.05*fbm(vec2(p.x*0.7, fl*3.1+uSeed), 3);
+    float d = p.y - y;
+    float under = smoothstep(0.0025, -0.0025, d);
+    col *= 1.0 - 0.38*smoothstep(0.09, 0.0, d)*step(0.0, d);
+    float depth = clamp(-d*2.8, 0., 1.);
+    vec3 lc = uC[L+1];
+    vec3 shaded = mix(lc*1.12, lc*0.68, depth);
+    shaded += 0.22*exp(-pow((d+0.012)*55., 2.))*vec3(1.0);
+    shaded += 0.06*exp(-pow((d+0.05)*18., 2.))*vec3(1.0);
+    col = mix(col, shaded, under);
+  }
+  return col;
+}
+vec3 radiant(vec2 p){
+  vec3 col = uC[0];
+  for (int k = 1; k < 6; k++) {
+    if (k >= uN) break;
+    float fk = float(k) + uSeed*0.37;
+    vec2 c = vec2(rnd(fk)*1.5-0.75, rnd(fk+3.)*0.9-0.45) * uP.x;
+    float r = 0.45 + 0.35*rnd(fk+7.);
+    vec2 q = p + 0.1*vec2(fbm(p*1.3+fk, 3), fbm(p*1.3+fk+5., 3));
+    float w = exp(-dot(q-c, q-c)/(r*r));
+    col = mix(col, uC[k], w*0.97);
+  }
+  return col;
+}
+vec3 glow(vec2 p){
+  vec2 c = vec2(0.62*uP.x, -0.78*uP.y);
+  float r = length((p - c)*vec2(1.0, 1.25)) + 0.04*fbm(p*2.+uSeed, 3);
+  float d = r - 0.95;
+  float i = d < 0. ? exp(d*12.) : exp(-d*3.2);
+  vec3 col = uC[0] + uC[1]*i*0.95 + (uN > 2 ? uC[2] : vec3(1.))*pow(i, 4.)*0.55;
+  return col;
+}
+vec3 fluid(vec2 p){
+  p *= 0.55;
+  vec2 q = vec2(fbm(p+uSeed, 4), fbm(p+vec2(5.2,1.3)+uSeed, 4));
+  vec2 r = vec2(fbm(p+2.2*q+vec2(1.7,9.2), 4), fbm(p+2.2*q+vec2(8.3,2.8), 4));
+  float f = fbm(p+2.0*r, 3);
+  float t = clamp(0.5 + f*1.6 + 0.3*length(q), 0., 1.);
+  vec3 col = ramp(t);
+  col *= 0.85 + 0.35*clamp(length(r)*1.4, 0., 1.);
+  return col;
+}
+vec3 rays(vec2 p){
+  vec2 c = vec2(0.0, -0.95);
+  vec2 d = p - c;
+  float a = atan(d.x, d.y);
+  float t = fract(a*1.6 + 0.5 + 0.03*fbm(vec2(a*4., length(d)), 3));
+  vec3 col = ramp(t);
+  float fall = smoothstep(1.9, 0.2, length(d));
+  float streak = 0.5 + 0.5*sin(a*38. + fbm(vec2(a*10., 0.), 3)*6.);
+  col = mix(uC[0]*0.4, col, fall) + 0.08*streak*fall;
+  return col;
+}
+float paperH(vec2 p){
+  float h = 0.;
+  float a = 0.5; vec2 q = p*3.;
+  for (int i = 0; i < 6; i++) { h += a*pow(1. - abs(gnoise(q)), 3.); q = mat2(1.7,1.1,-1.1,1.7)*q + 4.1; a *= 0.55; }
+  return uP.x*h + 0.02*fbm(p*55., 4);
+}
+vec3 paper(vec2 p){
+  float e = 1.5/uRes.y;
+  float h = paperH(p);
+  vec3 n = normalize(vec3((h - paperH(p+vec2(e,0)))/e*0.03, (h - paperH(p+vec2(0,e)))/e*0.03, 1.0));
+  float l = dot(n, normalize(vec3(-0.5, 0.6, 0.65)));
+  vec3 col = uC[0]*(0.62 + 0.48*l);
+  col *= 0.97 + 0.06*fbm(p*140., 3);
+  col = mix(col, uC[1], 0.25*smoothstep(0.1, 0.5, fbm(p*1.2+uSeed, 4)));
+  return col;
+}
+vec3 clouds(vec2 p){
+  vec3 sky = mix(uC[1], uC[0], smoothstep(-0.5, 0.5, p.y));
+  vec2 q = p*uP.x + vec2(uSeed);
+  float d = 0.65*abs(fbm(q*0.6, 3)) + fbm(q, 7)*0.8 + 0.35;
+  vec2 ql = q + vec2(-0.05, 0.06);
+  float dl = 0.65*abs(fbm(ql*0.6, 3)) + fbm(ql, 7)*0.8 + 0.35;
+  float cov = smoothstep(0.30 - uP.y, 0.46 - uP.y, d);
+  float light = clamp(0.62 + (d - dl)*7., 0., 1.);
+  vec3 cl = mix(uC[3], uC[2], light);
+  return mix(sky, cl, cov);
+}
+vec3 camo(vec2 p){
+  float f = fbm(p*3.2+uSeed, 5) + 0.12*fbm(p*14., 3);
+  vec3 col = uC[0];
+  col = mix(col, uC[1], smoothstep(-0.12, -0.10, f));
+  col = mix(col, uC[2], smoothstep(0.05, 0.07, f));
+  col = mix(col, uC[3], smoothstep(0.2, 0.22, f));
+  return col;
+}
+vec3 orb(vec2 p){
+  float r = length(p);
+  if (uP.x < 0.5) {
+    float g = exp(-r*r/(0.09));
+    return uC[0] + uC[1]*g*1.05 + uC[2]*exp(-r*r/0.012)*0.5;
+  } else if (uP.x < 1.5) {
+    float ring = exp(-pow((r-0.23)/0.07, 2.));
+    float core = exp(-r*r/0.01);
+    return uC[0] + uC[1]*ring + uC[2]*ring*ring*0.6 + uC[0]*core;
+  }
+  float t = clamp(0.5 - (p.x + p.y)*0.6, 0., 1.);
+  vec3 col = mix(uC[2], uC[1], t);
+  col += uC[3]*exp(-length(p - vec2(-0.35, 0.22))*3.2)*0.85;
+  col *= 0.92 + 0.08*fbm(p*3., 3);
+  return col;
+}
+
+void main(){
+  vec2 p = (gl_FragCoord.xy - 0.5*uRes) / uRes.y;
+  vec3 col;
+  if (uKind == 0) col = silk(p);
+  else if (uKind == 1) col = radiant(p);
+  else if (uKind == 2) col = glow(p);
+  else if (uKind == 3) col = fluid(p);
+  else if (uKind == 4) col = rays(p);
+  else if (uKind == 5) col = paper(p);
+  else if (uKind == 6) col = clouds(p);
+  else if (uKind == 7) col = camo(p);
+  else col = orb(p);
+  col += (hash(gl_FragCoord.xy*0.731) - 0.5)/255.*2.0;
+  o = vec4(clamp(col, 0., 1.), 1.);
+}`;
+
+const hex = (h) => { const n = parseInt(h.slice(1), 16); return [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255]; };
+const canvas = document.getElementById('c');
+canvas.width = 3840; canvas.height = 2160;
+const gl = canvas.getContext('webgl2', { preserveDrawingBuffer: true, antialias: false });
+const sh = (t, s) => { const x = gl.createShader(t); gl.shaderSource(x, s); gl.compileShader(x); if (!gl.getShaderParameter(x, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(x)); return x; };
+const prog = gl.createProgram();
+gl.attachShader(prog, sh(gl.VERTEX_SHADER, `#version 300 es
+in vec2 a; void main(){ gl_Position = vec4(a, 0, 1); }`));
+gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FRAG));
+gl.linkProgram(prog);
+if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+gl.useProgram(prog);
+const buf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+const loc = gl.getAttribLocation(prog, 'a');
+gl.enableVertexAttribArray(loc);
+gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+const U = (n) => gl.getUniformLocation(prog, n);
+const KINDS = { silk: 0, radiant: 1, glow: 2, fluid: 3, rays: 4, paper: 5, clouds: 6, camo: 7, orb: 8 };
+
+const toB64 = (c, type, q) => new Promise((res) => c.toBlob((b) => { const r = new FileReader(); r.onload = () => res(r.result.split(',')[1]); r.readAsDataURL(b); }, type, q));
+
+window.render = async (spec) => {
+  gl.viewport(0, 0, 3840, 2160);
+  gl.uniform2f(U('uRes'), 3840, 2160);
+  gl.uniform1i(U('uKind'), KINDS[spec.kind]);
+  const cols = spec.colors.map(hex);
+  while (cols.length < 6) cols.push(cols[cols.length - 1]);
+  gl.uniform3fv(U('uC'), cols.flat());
+  gl.uniform1i(U('uN'), spec.colors.length);
+  gl.uniform1f(U('uSeed'), spec.seed ?? 1);
+  const p = spec.p ?? [1, 1, 0, 0];
+  gl.uniform4f(U('uP'), p[0], p[1], p[2], p[3]);
+  // Draw in strips so a slow GPU never stalls on one huge draw.
+  gl.enable(gl.SCISSOR_TEST);
+  for (let y = 0; y < 2160; y += 270) { gl.scissor(0, y, 3840, 270); gl.drawArrays(gl.TRIANGLES, 0, 3); gl.finish(); }
+  gl.disable(gl.SCISSOR_TEST);
+  const full = await toB64(canvas, 'image/webp', 0.9);
+  const t = document.createElement('canvas'); t.width = 480; t.height = 270;
+  const g = t.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(canvas, 0, 0, 480, 270);
+  const thumb = await toB64(t, 'image/webp', 0.82);
+  return { full, thumb };
+};
+window.ready = true;
+</script>
