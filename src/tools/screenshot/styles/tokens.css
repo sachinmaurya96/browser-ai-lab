@@ -1,0 +1,247 @@
+/* ==========================================================================
+   Screenshot Studio tokens — the editor's `--sc-*` tokens resolved onto
+   Browser AI Lab's design tokens (styles.css), so light/dark follow the site.
+   Adapted from Shotcandy (MIT, © 2026 Bilal Tahir; see ../LICENSE).
+   ========================================================================== */
+
+:root {
+  /* ---- Accent families (used by a few decorative motion/mode rules) ----- */
+  --sc-candy-50: var(--accent-soft);
+  --sc-candy-100: var(--accent-soft);
+  --sc-candy-200: color-mix(in srgb, var(--accent) 30%, var(--card));
+  --sc-candy-300: color-mix(in srgb, var(--accent) 55%, var(--card));
+  --sc-candy-400: color-mix(in srgb, var(--accent) 80%, var(--card));
+  --sc-candy-500: var(--accent);
+  --sc-candy-600: var(--accent);
+  --sc-candy-700: var(--accent);
+  --sc-candy-800: color-mix(in srgb, var(--accent) 70%, #000);
+  --sc-tangerine-200: var(--sun-soft);
+  --sc-tangerine-300: color-mix(in srgb, var(--sun) 45%, var(--card));
+  --sc-tangerine-500: var(--sun);
+  --sc-tangerine-700: var(--sun);
+  --sc-mint-200: var(--sea-soft);
+  --sc-mint-300: color-mix(in srgb, var(--sea) 45%, var(--card));
+  --sc-mint-500: var(--sea);
+  --sc-mint-700: var(--sea);
+  --sc-lemon-200: var(--sun-soft);
+  --sc-lemon-300: color-mix(in srgb, var(--sun) 40%, var(--card));
+  --sc-lemon-500: color-mix(in srgb, var(--sun) 70%, #ffd84d);
+  --sc-lemon-700: var(--sun);
+  --sc-grape-200: #e2d9ff;
+  --sc-grape-300: #c9b8ff;
+  --sc-grape-500: #8b6cff;
+  --sc-grape-700: #5b3fd6;
+  --sc-blueberry-300: #a9c8ff;
+  --sc-blueberry-500: #4f8bff;
+  --sc-blueberry-700: #2459c9;
+
+  /* ---- Semantic colour (follows the site's light/dark tokens) ---------- */
+  --sc-paper: var(--paper);
+  --sc-stage: var(--paper-2);
+  --sc-surface: var(--card);
+  --sc-well: var(--paper);
+  --sc-well-hover: var(--paper-2);
+  --sc-line: var(--rule);
+  --sc-line-strong: color-mix(in srgb, var(--rule) 65%, var(--ink));
+  --sc-dots: color-mix(in srgb, var(--ink) 16%, transparent);
+
+  --sc-ink: var(--ink);
+  --sc-ink-2: var(--ink-2);
+  --sc-ink-3: var(--ink-3);
+  --sc-ink-4: color-mix(in srgb, var(--ink-3) 55%, var(--paper));
+  --sc-on-ink: var(--paper);
+  --sc-on-ink-accent: var(--accent-soft);
+
+  --sc-accent: var(--accent);
+  --sc-accent-text: var(--accent);
+  --sc-accent-fill: var(--accent);
+  --sc-accent-soft: var(--accent-soft);
+  --sc-accent-ring: var(--accent);
+  --sc-on-accent: var(--accent-ink);
+
+  --sc-success: var(--sea);
+  --sc-success-soft: var(--sea-soft);
+  --sc-warning: var(--sun);
+  --sc-warning-soft: var(--sun-soft);
+  --sc-danger: var(--danger);
+  --sc-danger-soft: var(--accent-soft);
+
+  --sc-selection: color-mix(in srgb, var(--accent) 22%, transparent);
+  --sc-scrim: rgba(21, 20, 18, 0.45);
+
+  /* Fills: flat, like the rest of the Lab. */
+  --sc-grad-candy: var(--ink);
+  --sc-grad-candy-hover: var(--accent);
+  --sc-grad-knob: var(--card);
+  --sc-grad-fill: var(--accent);
+  --sc-grad-auto: conic-gradient(
+    from 200deg,
+    #b9381a,
+    #f0b54a,
+    #5cc6b4,
+    #1a6b5f,
+    #4f8bff,
+    #8b6cff,
+    #b9381a
+  );
+  --sc-grad-sheen: linear-gradient(transparent, transparent);
+
+  /* ---- Elevation: hairline rules and hard offsets, no soft glows ------- */
+  --sc-shadow-tray: 0 0 0 1px var(--rule);
+  --sc-shadow-raised: 0 0 0 1px var(--rule);
+  --sc-shadow-raised-hover: 0 0 0 1px var(--ink);
+  --sc-shadow-pressed: inset 0 0 0 1px var(--ink);
+  --sc-shadow-well: inset 0 0 0 1px var(--rule);
+  --sc-shadow-float:
+    0 0 0 1px var(--rule), 4px 4px 0 color-mix(in srgb, var(--ink) 9%, transparent);
+  --sc-shadow-modal:
+    0 0 0 1px var(--rule), 8px 8px 0 color-mix(in srgb, var(--ink) 12%, transparent);
+  --sc-shadow-knob: 0 0 0 1.5px var(--ink);
+  --sc-shadow-candy: 3px 3px 0 var(--accent);
+  --sc-shadow-candy-pressed: 1px 1px 0 var(--accent);
+  --sc-shadow-swatch: inset 0 0 0 1px color-mix(in srgb, var(--ink) 14%, transparent);
+  --sc-focus-ring: 0 0 0 2px var(--paper), 0 0 0 4px var(--accent);
+  --sc-selected-ring: 0 0 0 2px var(--card), 0 0 0 3.5px var(--ink);
+
+  /* ---- Typography -------------------------------------------------------- */
+  --sc-font-display: var(--font-instrument), ui-serif, Georgia, serif;
+  --sc-font-ui: var(--font-grotesk), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --sc-font-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  /* size / line-height pairs. UI sizes are fractional on purpose (Figtree runs small). */
+  --sc-text-2xs: 10.5px;
+  --sc-leading-2xs: 14px; /* keycaps, tiny tags */
+  --sc-text-xs: 11.5px;
+  --sc-leading-xs: 16px; /* values (mono), meta */
+  --sc-text-sm: 12.5px;
+  --sc-leading-sm: 18px; /* tray titles, labels */
+  --sc-text-base: 13.5px;
+  --sc-leading-base: 20px; /* default UI text */
+  --sc-text-md: 15px;
+  --sc-leading-md: 22px; /* buttons (lg), body on pages */
+  --sc-text-lg: 17px;
+  --sc-leading-lg: 26px; /* page body large */
+  --sc-text-xl: 21px;
+  --sc-leading-xl: 28px; /* logo wordmark, dialog titles */
+  --sc-text-2xl: 28px;
+  --sc-leading-2xl: 34px; /* empty-state title, section titles */
+  --sc-text-3xl: 38px;
+  --sc-leading-3xl: 42px; /* page h2 */
+  --sc-text-4xl: 54px;
+  --sc-leading-4xl: 56px; /* page h1 (mobile 38) */
+  --sc-text-5xl: 76px;
+  --sc-leading-5xl: 76px; /* hero display */
+
+  --sc-weight-regular: 400;
+  --sc-weight-medium: 500;
+  --sc-weight-semibold: 600;
+  --sc-weight-bold: 700;
+  --sc-weight-black: 800; /* display only */
+
+  --sc-tracking-display: -0.035em; /* Bricolage at >= 28px */
+  --sc-tracking-tight: -0.015em; /* Bricolage 17–27px, Figtree >= 21px */
+  --sc-tracking-normal: 0;
+  --sc-tracking-caps: 0.06em; /* rare all-caps micro labels */
+
+  /* ---- Spacing (4px grid) ------------------------------------------------ */
+  --sc-space-0: 0;
+  --sc-space-px: 1px;
+  --sc-space-0-5: 2px;
+  --sc-space-1: 4px;
+  --sc-space-1-5: 6px;
+  --sc-space-2: 8px;
+  --sc-space-2-5: 10px;
+  --sc-space-3: 12px;
+  --sc-space-3-5: 14px;
+  --sc-space-4: 16px;
+  --sc-space-5: 20px;
+  --sc-space-6: 24px;
+  --sc-space-8: 32px;
+  --sc-space-10: 40px;
+  --sc-space-12: 48px;
+  --sc-space-16: 64px;
+  --sc-space-20: 80px;
+  --sc-space-24: 96px;
+  --sc-space-32: 128px;
+
+  /* ---- Radii ------------------------------------------------------------- */
+  --sc-radius-xs: 4px; /* keycaps, tiny tags */
+  --sc-radius-sm: 6px; /* segmented inner buttons, small chips */
+  --sc-radius-md: 8px; /* tiles, icon buttons, inputs */
+  --sc-radius-lg: 6px; /* buttons */
+  --sc-radius-xl: 12px; /* trays */
+  --sc-radius-2xl: 14px; /* stage, sheets, modals */
+  --sc-radius-pill: 999px;
+
+  /* ---- Layout ------------------------------------------------------------ */
+  --sc-header-h: 56px;
+  --sc-inspector-w: 348px;
+  --sc-inspector-w-compact: 312px; /* 1024–1279px viewports */
+  --sc-dock-h: 52px;
+  --sc-control-h-sm: 28px;
+  --sc-control-h: 36px;
+  --sc-control-h-lg: 44px;
+  --sc-hit-min: 40px; /* min touch target on coarse pointers: 44px */
+  --sc-stage-gutter: 24px;
+  --sc-page-max: 1120px; /* marketing/about pages */
+  --sc-prose-max: 660px;
+
+  /* Breakpoints (for reference; CSS vars can't be used in media queries)
+     sm 640 · md 768 (narrow editor → bottom sheet below this) · lg 1024 · xl 1280 · 2xl 1536 */
+
+  /* ---- Motion ------------------------------------------------------------ */
+  --sc-dur-instant: 80ms; /* press-down, colour swaps */
+  --sc-dur-fast: 140ms; /* hover, focus, small toggles */
+  --sc-dur-base: 220ms; /* popovers, tab switches, knob settle */
+  --sc-dur-slow: 360ms; /* sheets, preset apply cross-fade, bloom reveal */
+  --sc-dur-landing: 420ms; /* image drop squash */
+  --sc-dur-delight: 900ms; /* wrap toast + sprinkles total */
+  --sc-dur-toast: 2600ms; /* toast dwell before auto-dismiss */
+
+  --sc-ease-out: cubic-bezier(0.22, 1, 0.36, 1); /* default for entering */
+  --sc-ease-in: cubic-bezier(0.55, 0, 1, 0.45); /* leaving */
+  --sc-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1); /* moving between states */
+  --sc-ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1); /* overshoot: selection, knobs, chips */
+  --sc-ease-squish: cubic-bezier(0.5, 1.8, 0.4, 0.8); /* strong overshoot: sprinkles only */
+  --sc-ease-linear: linear;
+
+  /* JS spring equivalents (for WAAPI/Framer-style springs), documented in motion.md
+     pop:    stiffness 520, damping 30, mass 1
+     settle: stiffness 300, damping 32, mass 1
+     drop:   stiffness 380, damping 22, mass 1 */
+
+  /* ---- Z-index ----------------------------------------------------------- */
+  --sc-z-stage: 0;
+  --sc-z-handles: 10;
+  --sc-z-dock: 20;
+  --sc-z-header: 30;
+  --sc-z-popover: 40;
+  --sc-z-sheet: 50;
+  --sc-z-modal: 60;
+  --sc-z-toast: 70;
+  --sc-z-drag-overlay: 80;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --sc-scrim: rgba(0, 0, 0, 0.6);
+  }
+}
+:root[data-theme="dark"] {
+  --sc-scrim: rgba(0, 0, 0, 0.6);
+}
+
+/* ---- Reduced motion ------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --sc-dur-slow: 160ms;
+    --sc-dur-landing: 0ms;
+    --sc-dur-delight: 200ms;
+    --sc-ease-pop: var(--sc-ease-out);
+    --sc-ease-squish: var(--sc-ease-out);
+  }
+}
+
+:where(.sst) ::selection {
+  background: var(--sc-selection);
+}

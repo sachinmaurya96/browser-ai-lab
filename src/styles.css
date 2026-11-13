@@ -207,3 +207,33 @@ input[type='checkbox'] {
   width: 1.125rem;
   height: 1.125rem;
 }
+
+/* Site shell: the desktop sidebar is full (264px) or a 64px icon rail.
+   html[data-sidebar] is restored before first paint by the root layout. */
+@media (min-width: 1024px) {
+  .lab-shell {
+    display: grid;
+    grid-template-columns: 264px minmax(0, 1fr);
+    transition: grid-template-columns 200ms ease;
+  }
+  :root[data-sidebar='collapsed'] .lab-shell {
+    grid-template-columns: 64px minmax(0, 1fr);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lab-shell {
+    transition: none;
+  }
+}
+.sidebar-full {
+  display: flex;
+}
+.sidebar-rail {
+  display: none;
+}
+:root[data-sidebar='collapsed'] .sidebar-full {
+  display: none;
+}
+:root[data-sidebar='collapsed'] .sidebar-rail {
+  display: flex;
+}

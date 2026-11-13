@@ -6,6 +6,7 @@ import { Breadcrumbs } from '../../ui/Breadcrumbs'
 export const metadata = pageMetadata({
   title: 'Guides: Free Private AI Tools, Step by Step',
   description: 'Step-by-step guides to removing vocals, making subtitles and understanding how on-device browser AI works, using the free Browser AI Lab tools.',
+  keywords: ['how to remove vocals from a song', 'how to make subtitles', 'browser ai guide', 'webgpu ai in browser', 'free ai tools tutorial'],
   path: '/guides',
   defaultImage: true,
 })

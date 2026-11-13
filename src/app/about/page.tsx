@@ -5,8 +5,9 @@ import { AboutCard } from '../../ui/AboutCard'
 import { Breadcrumbs } from '../../ui/Breadcrumbs'
 
 export const metadata = pageMetadata({
-  title: 'About Browser AI Lab',
+  title: 'About the Maker and How It Works',
   description: 'Browser AI Lab is a free collection of AI and utility tools built by Sachin Maurya that run entirely in your browser, so your files never leave your device.',
+  keywords: ['about browser ai lab', 'sachin maurya', 'on-device ai', 'private browser tools', 'webgpu ai tools'],
   path: '/about',
   defaultImage: true,
 })

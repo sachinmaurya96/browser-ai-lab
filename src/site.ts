@@ -10,7 +10,7 @@ export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.browse
 export const SITE_NAME = 'Browser AI Lab'
 export const SITE_TAGLINE = 'Free AI tools that run in your browser'
 export const SITE_DESCRIPTION =
-  'Free, private AI tools that run entirely in your browser: remove backgrounds, separate vocals, transcribe audio, translate, edit PDFs and more. No uploads, no sign-up.'
+  'Free, private AI tools that run in your browser: remove backgrounds, split vocals, transcribe audio, edit PDFs and style screenshots. No upload, no sign-up.'
 
 export const AUTHOR = {
   name: 'Sachin Maurya',

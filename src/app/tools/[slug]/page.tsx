@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowUpRight, Cpu, HardDrive, ShieldCheck } from 'lucide-react'
 import { TOOL_CONTENT } from '../../../content/tools'
-import { JsonLd, toolApp } from '../../../seo/jsonld'
+import { JsonLd, faqPage, toolApp } from '../../../seo/jsonld'
 import { pageMetadata } from '../../../seo/metadata'
 import { TOOLS, categoryOf, getTool } from '../../../tools'
 import { toolPath } from '../../../tools/slugs'
@@ -35,7 +35,7 @@ export default async function ToolPage({ params }: Props) {
 
   return (
     <article className="space-y-6">
-      <JsonLd data={toolApp(tool, c, path)} />
+      <JsonLd data={c.faqs.length ? [toolApp(tool, c, path), faqPage(c.faqs)] : toolApp(tool, c, path)} />
       <header className="border-b border-rule pb-6">
         <Breadcrumbs items={[{ name: 'Home', path: '/' }, { name: cat.label, path: `/category/${cat.slug}` }, { name: tool.name, path }]} />
         <div className="flex flex-wrap items-end justify-between gap-4">
@@ -69,6 +69,17 @@ export default async function ToolPage({ params }: Props) {
               ))}
             </ul>
           </section>
+
+          {c.useCases && c.useCases.length > 0 && (
+            <section aria-labelledby="uses">
+              <h2 id="uses" className="font-display text-4xl">Popular uses</h2>
+              <ul className="mt-4 grid gap-2 text-[15px] leading-relaxed text-ink-2 sm:grid-cols-2">
+                {c.useCases.map((u) => (
+                  <li key={u} className="flex gap-2 rounded-lg border border-rule bg-card px-3 py-2"><span className="text-accent" aria-hidden>→</span>{u}</li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           {c.faqs.length > 0 && (
             <section aria-labelledby="faq">

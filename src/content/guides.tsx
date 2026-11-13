@@ -14,6 +14,8 @@ export interface Guide {
   /** ISO dates. Update `modified` whenever the content changes. */
   published: string
   modified: string
+  /** Search phrases for the keywords meta. */
+  keywords: string[]
   /** Tools this guide walks through; linked at the end. */
   tools: string[]
   body: ReactNode
@@ -30,6 +32,7 @@ export const GUIDES: Guide[] = [
     description: 'Make a karaoke instrumental or an a cappella from any song in your browser with Demucs AI: separate the stems, mute the vocals and export WAV or MP3.',
     published: '2026-11-11',
     modified: '2026-11-11',
+    keywords: ['how to remove vocals from a song', 'remove vocals free', 'make karaoke track', 'acapella from song', 'vocal remover online free', 'demucs'],
     tools: ['vocal-remover', 'speech-to-text'],
     body: (
       <>
@@ -97,6 +100,7 @@ export const GUIDES: Guide[] = [
     description: 'Create timestamped SRT or VTT subtitles from a video or recording with Whisper AI running in your browser, then translate them to English if needed.',
     published: '2026-11-11',
     modified: '2026-11-11',
+    keywords: ['how to make subtitles', 'srt file from video', 'auto subtitle generator free', 'vtt subtitles', 'transcribe video to text', 'whisper subtitles'],
     tools: ['speech-to-text', 'ai-translator'],
     body: (
       <>
@@ -143,6 +147,7 @@ export const GUIDES: Guide[] = [
     description: 'What happens when you use an AI tool in Browser AI Lab: model downloads and caching, WebGPU and WebAssembly, Web Workers, and why your files stay private.',
     published: '2026-11-11',
     modified: '2026-11-12',
+    keywords: ['how ai runs in browser', 'webgpu ai', 'on-device ai', 'transformers.js', 'onnx runtime web', 'private ai'],
     tools: ['background-remover', 'speech-to-text'],
     body: (
       <>

@@ -68,7 +68,17 @@ export const toolApp = (tool: Tool, c: ToolContent, path: string): Json => ({
   isAccessibleForFree: true,
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   featureList: c.features,
+  keywords: c.keywords.join(', '),
+  image: absolute(`${path}/opengraph-image`),
+  inLanguage: 'en',
   publisher: { '@id': ORG_ID },
+})
+
+/** The visible FAQ section as FAQPage data (only questions shown on the page). */
+export const faqPage = (faqs: { q: string; a: string }[]): Json => ({
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
 })
 
 export const itemList = (name: string, items: { name: string; path: string }[]): Json => ({

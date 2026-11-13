@@ -1,0 +1,1529 @@
+"use client";
+/**
+ * The inspector: Styles → Background → Screens → Layout (+ 3D tilt) → Frame, or the
+ * contextual annotation inspector when a tool or annotation is active.
+ * Every control writes the scene directly; the preview re-renders live.
+ */
+import { memo, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type BackgroundFill,
+  type BackgroundPreset,
+  type CanvasAnchor,
+  BACKGROUND_PRESETS,
+  GRADIENT_PRESETS,
+  MESH_PRESETS,
+  wallpaperCollections,
+  getBackgroundPreset,
+  getStylePreset,
+  importImage,
+  isVideoScene,
+  resolveFrame,
+} from "../engine";
+import { fillToCss } from "../lib/fill-css";
+import { Icon, type IconName } from "../icons";
+import { ColorPicker } from "../ui/ColorPicker";
+import { Popover, Segmented, Switch, focusNextFrame } from "../ui/controls";
+import { Slider } from "../ui/Slider";
+import { AnnotationInspector } from "./AnnotationInspector";
+import { styleName } from "./app";
+import { TrayTitle } from "./TrayTitle";
+import { useApp, useScene, useUi } from "./context";
+import { openFilePicker } from "./EmptyState";
+import { StyleThumb } from "./StyleThumb";
+import { GradientEditor } from "./GradientEditor";
+import { MotionTray } from "./MotionTray";
+import { CodeTray, ThemesTray, WindowTray } from "./CodeInspector";
+import { CardTray, PostStylesTray, PostTray } from "./PostInspector";
+import { HeadlineTray, SetStylesTray, SetTray, SlideTray } from "./AppStoreInspector";
+import { BatchScope, OverrideDot, OverrideReset } from "./BatchScope";
+import { ScreensTray } from "./ScreensTray";
+import { CutoutTray } from "./CutoutTray";
+import { QuotePresetsTray, QuoteTray, QuoteTypeTray } from "./QuoteInspector";
+import { Device3DTray } from "./Device3D";
+
+const DEFAULT_ROW = ["sherbet", "mint-julep", "grape-soda", "paper", "midnight", "satin"];
+
+// ---------------------------------------------------------------------------
+// Styles
+// ---------------------------------------------------------------------------
+
+export function useStyleRow(max = 6) {
+  const current = useScene((s) => s.scene.meta.stylePresetId);
+  const [row, setRow] = useState<string[]>(DEFAULT_ROW.slice(0, max));
+  useEffect(() => {
+    if (!current || row.includes(current)) return;
+    // A style applied from elsewhere (gallery, shortcuts) joins the front of the row.
+    setRow((r) => [current, ...r.filter((x) => x !== current)].slice(0, max));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current]);
+  return { row, current };
+}
+
+export const StylesTray = memo(function StylesTray() {
+  const app = useApp();
+  const { row, current } = useStyleRow();
+  const custom = useUi((s) => s.customPresets);
+  const onKey = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const btns = Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>("button.preset"));
+    const i = btns.indexOf(document.activeElement as HTMLButtonElement);
+    if (i < 0) return;
+    const d = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: 3, ArrowUp: -3 }[e.key];
+    if (!d) return;
+    e.preventDefault();
+    btns[Math.max(0, Math.min(btns.length - 1, i + d))]?.focus();
+  };
+  return (
+    <section className="tray" aria-labelledby="t-styles" data-testid="styles-tray">
+      <div className="tray-head">
+        <TrayTitle id="t-styles">Presets</TrayTitle>
+        <span className="head-links">
+          <button
+            type="button"
+            className="link quiet"
+            title="Shuffle: re-roll style, background, tilt and frame together (S)"
+            data-testid="shuffle"
+            onClick={() => app.shuffle()}
+          >
+            <Icon name="shuffle" size="xs" /> Shuffle <span className="kbd">S</span>
+          </button>
+          <button
+            type="button"
+            className="link"
+            onClick={(e) => {
+              // Safari doesn't focus buttons on click; focus it so closing the jar returns here.
+              e.currentTarget.focus();
+              app.ui.set({ modal: "gallery" });
+            }}
+          >
+            All styles <span className="kbd">G</span>
+          </button>
+        </span>
+      </div>
+      <div className="presets" onKeyDown={onKey} onPointerLeave={() => app.clearPreview()}>
+        {row.map((id, i) => {
+          const p = getStylePreset(id);
+          const c = custom.find((x) => x.id === id);
+          const patch = p?.patch ?? c?.patch;
+          if (!patch) return null;
+          const name = p?.name ?? c?.name ?? id;
+          return (
+            <button
+              key={id}
+              type="button"
+              className={`preset${current === id ? " on" : ""}`}
+              aria-pressed={current === id}
+              aria-label={`${name} style (${i + 1})`}
+              title={name}
+              onPointerEnter={(e) => e.pointerType === "mouse" && app.previewStyle(id)}
+              onClick={() => {
+                app.applyStyle(id);
+                app.announce(`Style: ${name}`);
+              }}
+            >
+              <div className="thumb">
+                <StyleThumb styleKey={id} patch={patch} aspect={[4, 3]} target={96} priority={10} />
+                {current === id && (
+                  <span className="sel-check" aria-hidden="true">
+                    <Icon name="check" size="xs" />
+                  </span>
+                )}
+              </div>
+              <span className="name">{name}</span>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+});
+
+// ---------------------------------------------------------------------------
+// Background
+// ---------------------------------------------------------------------------
+
+const FEATURED = [
+  "sherbet",
+  "sherbet-linear",
+  "tangerine-dream",
+  "lemonade",
+  "mint-julep",
+  "blueberry-soda",
+  "grape-soda",
+  "cotton-candy",
+  "peach-fizz",
+  "sea-glass",
+  "dusk-candy",
+  "aurora-pop",
+  "licorice-gradient",
+  "cream",
+];
+
+type BgTab = "gradient" | "mesh" | "solid" | "image";
+
+function sameFill(a: BackgroundFill, b: BackgroundFill): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+function presetFor(fill: BackgroundFill): BackgroundPreset | undefined {
+  return BACKGROUND_PRESETS.find((b) => sameFill(b.fill, fill));
+}
+
+function tabFor(fill: BackgroundFill): BgTab {
+  const p = presetFor(fill);
+  if (p && FEATURED.includes(p.id)) return "gradient";
+  switch (fill.kind) {
+    case "mesh":
+      return "mesh";
+    case "solid":
+    case "none":
+      return "solid";
+    case "image":
+      return "image";
+    default:
+      return "gradient";
+  }
+}
+
+function bgName(fill: BackgroundFill): string {
+  if (fill.kind === "auto") return "From your shot";
+  if (fill.kind === "none") return "Transparent";
+  const p = presetFor(fill);
+  if (p) return p.label;
+  if (fill.kind === "image") return "Your image";
+  if (fill.kind === "solid") return fill.color.toUpperCase();
+  return "Custom";
+}
+
+function Swatch({
+  fill,
+  label,
+  on,
+  onClick,
+  palette,
+  small,
+  grain,
+}: {
+  fill: BackgroundFill;
+  label: string;
+  on: boolean;
+  onClick: () => void;
+  palette?: Parameters<typeof fillToCss>[1];
+  small?: boolean;
+  grain?: number;
+}) {
+  const app = useApp();
+  return (
+    <button
+      onPointerEnter={(e) => {
+        if (e.pointerType !== "mouse" || on) return;
+        app.previewScene(
+          (s) => ({
+            ...s,
+            background: {
+              ...s.background,
+              fill,
+              grain:
+                grain === undefined ? s.background.grain : { ...s.background.grain, amount: grain },
+            },
+          }),
+          label,
+        );
+      }}
+      onPointerLeave={() => app.clearPreview()}
+      type="button"
+      className={`sw${on ? " on" : ""}${small ? " sm" : ""}${fill.kind === "none" ? " transparent" : ""}`}
+      style={fill.kind === "none" ? undefined : { background: fillToCss(fill, palette ?? null) }}
+      aria-label={label}
+      aria-pressed={on}
+      title={label}
+      onClick={onClick}
+    />
+  );
+}
+
+/** A colour dot that opens the colour picker. */
+export function ColourButton({
+  value,
+  onChange,
+  label,
+  alpha,
+  className = "colour-dot",
+  size,
+}: {
+  value: string;
+  onChange: (hex: string, final: boolean) => void;
+  label: string;
+  alpha?: boolean;
+  className?: string;
+  size?: number;
+}) {
+  const app = useApp();
+  const ref = useRef<HTMLButtonElement>(null);
+  const [open, setOpen] = useState(false);
+  const palette = useScene((s) => {
+    const c = s.scene.content;
+    return c.kind === "image" && c.assetId ? c.assetId : null;
+  });
+  const colours = useMemo(() => {
+    const p = palette ? app.library.get(palette)?.palette : null;
+    return p ? p.swatches.slice(0, 8).map((s) => s.hex) : [];
+  }, [palette, app]);
+  return (
+    <>
+      <button
+        ref={ref}
+        type="button"
+        className={className}
+        style={{
+          ...(className.includes("rainbow") && !className.includes(" on")
+            ? {}
+            : { background: value }),
+          ...(size ? { width: size, height: size } : {}),
+        }}
+        aria-label={`${label}: ${value}`}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      />
+      <Popover
+        open={open}
+        anchor={ref}
+        onClose={() => setOpen(false)}
+        label={label}
+        className="picker-pop"
+        align="center"
+      >
+        {open && (
+          <ColorPicker
+            value={value}
+            onChange={onChange}
+            palette={colours}
+            alpha={alpha}
+            label={label}
+          />
+        )}
+      </Popover>
+    </>
+  );
+}
+
+export const BackgroundTray = memo(function BackgroundTray({ bare = false }: { bare?: boolean }) {
+  const app = useApp();
+  const fill = useScene((s) => s.scene.background.fill);
+  const grain = useScene((s) => s.scene.background.grain.amount);
+  const contentId = useScene((s) =>
+    s.scene.content.kind === "image" ? s.scene.content.assetId : null,
+  );
+  const hasContent = useUi((s) => s.hasContent);
+  useUi((s) => s.assetsVersion);
+  const palette = contentId ? (app.library.get(contentId)?.palette ?? null) : null;
+  const [tab, setTab] = useState<BgTab>(() => tabFor(fill));
+  const [allGradients, setAllGradients] = useState(false);
+  const [adjust, setAdjust] = useState(false);
+  const gradientish = ["linear", "radial", "conic", "mesh", "auto"].includes(fill.kind);
+  const lastFill = useRef(fill);
+  useEffect(() => {
+    // Follow style changes that move the fill to another tab.
+    if (lastFill.current !== fill) {
+      const p = presetFor(fill);
+      if (!p || !FEATURED.includes(p.id) || tab !== "gradient") {
+        const t = tabFor(fill);
+        if (t !== tab && fill.kind !== "auto") setTab(t);
+      }
+      lastFill.current = fill;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fill]);
+
+  const setFill = (f: BackgroundFill, grainAmt?: number) => {
+    app.store.update((s) => ({
+      ...s,
+      background: {
+        fill: f,
+        grain:
+          grainAmt === undefined ? s.background.grain : { ...s.background.grain, amount: grainAmt },
+      },
+    }));
+  };
+  const pickPreset = (b: BackgroundPreset) => setFill(b.fill, b.grain.amount);
+
+  const list =
+    tab === "gradient"
+      ? [
+          ...FEATURED.map((id) => getBackgroundPreset(id)!).filter(Boolean),
+          ...(allGradients ||
+          GRADIENT_PRESETS.some((g) => !FEATURED.includes(g.id) && sameFill(g.fill, fill))
+            ? GRADIENT_PRESETS.filter((g) => !FEATURED.includes(g.id))
+            : []),
+        ]
+      : tab === "mesh"
+        ? MESH_PRESETS
+        : tab === "solid"
+          ? BACKGROUND_PRESETS.filter((b) => b.group === "solid")
+          : [];
+
+  const autoStyles = [
+    { style: "mesh" as const, label: "Mesh from your shot" },
+    { style: "linear" as const, label: "Gradient from your shot" },
+    { style: "soft" as const, label: "Soft colour from your shot" },
+  ];
+  const dots = palette
+    ? [...palette.swatches]
+        .sort((a, b) => b.lch.C * Math.sqrt(b.weight) - a.lch.C * Math.sqrt(a.weight))
+        .slice(0, 3)
+        .map((s) => s.hex)
+    : ["var(--sc-line-strong)", "var(--sc-line)", "var(--sc-well-hover)"];
+
+  const uploadBg = () =>
+    openFilePicker(async (f) => {
+      try {
+        const img = await importImage(f);
+        app.library.add(img);
+        void app.db?.assets
+          .put({
+            id: img.id,
+            blob: img.blob,
+            mime: img.mime,
+            width: img.width,
+            height: img.height,
+            role: "background",
+            createdAt: Date.now(),
+          })
+          .catch(() => undefined);
+        setFill({
+          kind: "image",
+          assetId: img.id,
+          fit: "cover",
+          blur: 0,
+          tint: 0,
+          focusX: 0.5,
+          focusY: 0.5,
+        });
+        app.ui.set((u) => ({ assetsVersion: u.assetsVersion + 1 }));
+      } catch {
+        app.toast({
+          kind: "error",
+          title: "Couldn't use that image",
+          detail: "Try PNG, JPEG or WebP.",
+          prose: true,
+        });
+      }
+    });
+
+  return (
+    <section className="tray" aria-labelledby="t-bg" data-testid="background-tray">
+      {!bare && (
+        <div className="tray-head">
+          <TrayTitle id="t-bg">
+            Background
+            <OverrideDot group="background" />
+          </TrayTitle>
+          <OverrideReset group="background">
+            <span className="meta">{bgName(fill)}</span>
+          </OverrideReset>
+        </div>
+      )}
+      <div className="auto-row">
+        <div className="dots" aria-hidden="true">
+          {dots.map((c, i) => (
+            <i key={i} style={{ background: c }} />
+          ))}
+        </div>
+        <div className="txt">
+          From your shot
+          <small>{hasContent && palette ? "3 colours picked" : "Paste an image to unlock"}</small>
+        </div>
+        {hasContent && palette && (
+          <div className="sws">
+            {autoStyles.map((a) => {
+              const on = fill.kind === "auto" && fill.style === a.style;
+              return (
+                <Swatch
+                  key={a.style}
+                  fill={{ kind: "auto", style: a.style, variant: on ? fill.variant : 0 }}
+                  label={on ? `${a.label} (click again for another mix)` : a.label}
+                  on={on}
+                  palette={palette}
+                  onClick={() =>
+                    setFill(
+                      {
+                        kind: "auto",
+                        style: a.style,
+                        variant: on && fill.kind === "auto" ? (fill.variant + 1) % 6 : 0,
+                      },
+                      0,
+                    )
+                  }
+                />
+              );
+            })}
+          </div>
+        )}
+      </div>
+      <Segmented<BgTab>
+        label="Background type"
+        role="tablist"
+        value={tab}
+        onChange={setTab}
+        style={{ marginBottom: 12 }}
+        options={[
+          { value: "gradient", label: "Gradient" },
+          { value: "mesh", label: "Mesh" },
+          { value: "solid", label: "Solid" },
+          { value: "image", label: "Image" },
+        ]}
+      />
+      {tab !== "image" ? (
+        <div className="swatches" role="group" aria-label={`${tab} backgrounds`}>
+          {list.map((b) => (
+            <Swatch
+              key={b.id}
+              fill={b.fill}
+              label={
+                // Two backgrounds share a name (Sherbet mesh and gradient): say which (P2-30).
+                list.filter((o) => o.label === b.label).length > 1
+                  ? `${b.label} ${b.fill.kind === "mesh" ? "mesh" : "gradient"}`
+                  : b.label
+              }
+              on={sameFill(b.fill, fill)}
+              grain={b.grain.amount}
+              onClick={() => pickPreset(b)}
+            />
+          ))}
+          {tab === "solid" && (
+            <>
+              <Swatch
+                fill={{ kind: "none" }}
+                label="Transparent"
+                on={fill.kind === "none"}
+                onClick={() => setFill({ kind: "none" })}
+              />
+              <ColourButton
+                className={`sw add rainbow${fill.kind === "solid" && !presetFor(fill) ? " on" : ""}`}
+                value={fill.kind === "solid" ? fill.color : "#ff8fab"}
+                label="Custom colour"
+                onChange={(c) =>
+                  app.store.update(
+                    (s) => ({
+                      ...s,
+                      background: { ...s.background, fill: { kind: "solid", color: c } },
+                    }),
+                    { coalesce: "bg-solid" },
+                  )
+                }
+              />
+            </>
+          )}
+        </div>
+      ) : (
+        <WallpaperLibrary
+          fill={fill}
+          onPick={(f) => setFill(f, 0)}
+          onUpload={uploadBg}
+        />
+      )}
+      {fill.kind === "image" && <ImageDetails fill={fill} />}
+      <div
+        style={{ display: "flex", justifyContent: "space-between", marginTop: 8, marginBottom: -4 }}
+      >
+        {tab === "gradient" && list.length <= FEATURED.length ? (
+          <button type="button" className="link quiet" onClick={() => setAllGradients(true)}>
+            More gradients
+          </button>
+        ) : (
+          <span />
+        )}
+        {fill.kind !== "none" && (
+          <button
+            type="button"
+            className="link quiet"
+            aria-expanded={adjust}
+            onClick={() => setAdjust((a) => !a)}
+          >
+            <Icon name="sliders" size="xs" />{" "}
+            {gradientish
+              ? adjust
+                ? "Done editing"
+                : "Edit gradient"
+              : adjust
+                ? "Hide adjustments"
+                : "Adjust"}
+          </button>
+        )}
+      </div>
+      {adjust &&
+        (gradientish ? (
+          <GradientEditor fill={fill} grain={grain} palette={palette} />
+        ) : (
+          <BackgroundDetails fill={fill} grain={grain} />
+        ))}
+    </section>
+  );
+});
+
+function ImageDetails({ fill }: { fill: Extract<BackgroundFill, { kind: "image" }> }) {
+  const app = useApp();
+  return (
+    <div style={{ marginTop: 10 }}>
+      <Slider
+        label="Blur"
+        value={fill.blur}
+        min={0}
+        max={80}
+        onChange={(v) => app.set(["background", "fill", "blur"], v)}
+      />
+      <Slider
+        label="Tint"
+        value={fill.tint}
+        min={-1}
+        max={1}
+        step={0.05}
+        centered
+        format={(v) => (v === 0 ? "0" : v > 0 ? `+${v.toFixed(2)}` : v.toFixed(2))}
+        valueText={(v) => (v < 0 ? "darker" : v > 0 ? "lighter" : "none")}
+        onChange={(v) => app.set(["background", "fill", "tint"], v)}
+      />
+    </div>
+  );
+}
+
+function BackgroundDetails({ fill, grain }: { fill: BackgroundFill; grain: number }) {
+  const app = useApp();
+  const set = (path: (string | number)[], v: unknown, key?: string) => app.set(path, v, key);
+  return (
+    <div style={{ marginTop: 10 }}>
+      {fill.kind !== "none" && (
+        <Slider
+          label="Grain"
+          value={Math.round(grain * 100)}
+          min={0}
+          max={100}
+          onChange={(v) => set(["background", "grain", "amount"], v / 100, "grain")}
+        />
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+/** The wallpaper library, by collection; each collection folds away. 4K originals load on use. */
+function WallpaperLibrary({
+  fill,
+  onPick,
+  onUpload,
+}: {
+  fill: BackgroundFill;
+  onPick: (f: Extract<BackgroundFill, { kind: "image" }>) => void;
+  onUpload: () => void;
+}) {
+  const collections = useMemo(() => wallpaperCollections(), []);
+  const [closed, setClosed] = useState<string[]>([]);
+  return (
+    <div className="wall-library">
+      <button type="button" className="wall-upload" onClick={onUpload}>
+        <Icon name="upload" size="sm" /> Upload your own image
+      </button>
+      {collections.map((c) => {
+        const open = !closed.includes(c.name);
+        return (
+          <section key={c.name} className="wall-section">
+            <button
+              type="button"
+              className="wall-head"
+              aria-expanded={open}
+              onClick={() =>
+                setClosed((x) => (open ? [...x, c.name] : x.filter((n) => n !== c.name)))
+              }
+            >
+              <Icon name="chevronDown" size="xs" className="wall-chev" />
+              {c.name}
+              <span className="wall-count">{c.items.length}</span>
+            </button>
+            {open && (
+              <div className="wall-grid" role="group" aria-label={`${c.name} wallpapers`}>
+                {c.items.map((w) => {
+                  if (w.fill.kind !== "image") return null;
+                  const wf = w.fill;
+                  const id = wf.assetId.slice(8);
+                  const on = fill.kind === "image" && fill.assetId === wf.assetId;
+                  return (
+                    <button
+                      key={w.id}
+                      type="button"
+                      className={`wall${on ? " on" : ""}`}
+                      style={{ backgroundImage: `url(/screenshot-studio/backgrounds/thumbs/${id}.webp)` }}
+                      aria-label={w.label}
+                      aria-pressed={on}
+                      title={w.label}
+                      onClick={() => onPick(on && fill.kind === "image" ? fill : { ...wf })}
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * Camera angles: [name, tilt X, tilt Y, rotate, camera distance]. Degrees stay
+ * inside the sliders' ranges, so every angle can be fine-tuned afterwards.
+ */
+const ANGLES: readonly (readonly [string, number, number, number, number])[] = [
+  ["Flat", 0, 0, 0, 3.2],
+  ["Hero left", 10, -22, 0, 3],
+  ["Hero right", 10, 22, 0, 3],
+  ["Lean back", 28, 0, 0, 3.2],
+  ["Subtle left", 4, -10, 0, 4.5],
+  ["Subtle right", 4, 10, 0, 4.5],
+  ["Lean in", -20, 0, 0, 3.2],
+  ["Lay flat", 44, 0, 0, 2.4],
+  ["Wide left", 14, -38, 4, 2],
+  ["Wide right", 14, 38, -4, 2],
+  ["Iso left", 38, -24, -22, 2.6],
+  ["Iso right", 38, 24, 22, 2.6],
+  ["Desk left", 30, -16, -10, 2.8],
+  ["Desk right", 30, 16, 10, 2.8],
+  ["Tip left", 0, 0, -8, 3.2],
+  ["Tip right", 0, 0, 8, 3.2],
+];
+
+// Layout (padding, corners, shadow, border, inset, 3D tilt)
+// ---------------------------------------------------------------------------
+
+const SHADOWS: { id: string; label: string; icon: IconName }[] = [
+  { id: "none", label: "None", icon: "shNone" },
+  { id: "soft", label: "Soft", icon: "shSoft" },
+  { id: "float", label: "Float", icon: "shFloat" },
+  { id: "deep", label: "Deep", icon: "shDeep" },
+  { id: "solid", label: "Solid", icon: "shSolid" },
+  { id: "glow", label: "Glow", icon: "shGlow" },
+];
+
+const PAD_STOPS = [
+  { value: 0 },
+  { value: 40, label: "S" },
+  { value: 80, label: "M" },
+  { value: 120, label: "L" },
+  { value: 160, label: "XL" },
+];
+const RADIUS_STOPS = [
+  { value: 0 },
+  { value: 12, label: "Soft" },
+  { value: 24, label: "Round" },
+  { value: 48 },
+];
+const padName = (v: number) =>
+  v === 0
+    ? "no padding"
+    : v < 60
+      ? "small padding"
+      : v < 100
+        ? "medium padding"
+        : v < 140
+          ? "large padding"
+          : "extra large padding";
+
+const ANCHOR_GRID: CanvasAnchor[] = [
+  "top-left",
+  "top",
+  "top-right",
+  "left",
+  "center",
+  "right",
+  "bottom-left",
+  "bottom",
+  "bottom-right",
+];
+const anchorName = (a: CanvasAnchor) => (a === "center" ? "Centre" : a.replace("-", " "));
+
+/** Fit (fixed and ratio sizes), a 3x3 position grid and how far the card bleeds off the edge. */
+export function PositionControls() {
+  const app = useApp();
+  const canvas = useScene((s) => s.scene.canvas);
+  const anchor = canvas.anchor ?? "center";
+  const bleed = canvas.bleed ?? 0;
+  const sized = canvas.size.kind !== "auto";
+  const onGridKey = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const i = ANCHOR_GRID.indexOf(anchor);
+    const d = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: 3, ArrowUp: -3 }[e.key];
+    if (!d) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const col = i % 3;
+    if ((d === 1 && col === 2) || (d === -1 && col === 0)) return;
+    const next = ANCHOR_GRID[i + d];
+    if (!next) return;
+    app.set(["canvas", "anchor"], next);
+    app.announce(`Position: ${anchorName(next)}`);
+    // React clears currentTarget once the handler returns: keep the grid for the next frame.
+    const grid = e.currentTarget;
+    focusNextFrame(() => grid.querySelector<HTMLButtonElement>(`[data-anchor="${next}"]`));
+  };
+  return (
+    <div className="position" data-testid="position">
+      <div className="sub" style={{ marginTop: 14 }}>
+        Position
+      </div>
+      <div className="position-row">
+        <div className="pos-grid" role="radiogroup" aria-label="Position" onKeyDown={onGridKey}>
+          {ANCHOR_GRID.map((a) => (
+            <button
+              key={a}
+              type="button"
+              role="radio"
+              data-anchor={a}
+              aria-checked={anchor === a}
+              aria-label={anchorName(a)}
+              title={anchorName(a)}
+              tabIndex={anchor === a ? 0 : -1}
+              className={`pos-cell${anchor === a ? " on" : ""}`}
+              onClick={() => app.set(["canvas", "anchor"], a)}
+            >
+              <i />
+            </button>
+          ))}
+        </div>
+        <div className="position-side">
+          {sized ? (
+            <>
+              <span className="side-label">Fit</span>
+              <Segmented
+                label="Fit"
+                value={canvas.fit ?? "auto"}
+                onChange={(v) => app.set(["canvas", "fit"], v)}
+                options={[
+                  { value: "auto", label: "Smart", title: "Fills empty bands by growing the card" },
+                  { value: "contain", label: "Contain", title: "Always fully visible" },
+                  { value: "fill", label: "Fill", title: "Fills the canvas, bleeding the rest" },
+                ]}
+              />
+            </>
+          ) : (
+            <p className="side-note">
+              {anchor === "center"
+                ? "Pick an edge to let the card run off it."
+                : `Anchored ${anchorName(anchor)}.`}
+            </p>
+          )}
+        </div>
+      </div>
+      <Slider
+        label="Bleed"
+        value={Math.round(bleed * 100)}
+        min={0}
+        max={60}
+        disabled={anchor === "center"}
+        stops={[{ value: 0 }, { value: 20, label: "Peek" }, { value: 40, label: "Deep" }]}
+        format={(v) => `${Math.round(v)}%`}
+        valueText={(v) => (v === 0 ? "no bleed" : `${Math.round(v)} percent off the edge`)}
+        onChange={(v) => app.set(["canvas", "bleed"], v / 100)}
+      />
+      {anchor === "center" && sized && (
+        <p className="note">Bleed runs the card off the edge opposite its position.</p>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Caption card: a headline and subhead set above the screenshot. On by default
+ * for tall canvases with landscape shots; also editable on the stage.
+ */
+export function CaptionControls() {
+  const app = useApp();
+  const cap = useScene((s) => s.scene.caption);
+  const on = !!cap?.enabled;
+  return (
+    <div className="caption-controls" data-testid="caption-controls">
+      <div className="toggle-row">
+        <span className="label">
+          Caption
+          <small>A headline above the screenshot. Click it on the canvas to edit.</small>
+        </span>
+        <Switch
+          checked={on}
+          label="Caption"
+          onChange={(v) => {
+            app.setCaption({ enabled: v });
+            app.announce(v ? "Caption on" : "Caption off");
+          }}
+        />
+      </div>
+      {on && cap && (
+        <div className="caption-fields">
+          <label className="input">
+            <span className="sr-only">Caption headline</span>
+            <input
+              value={cap.headline}
+              placeholder="Headline"
+              data-testid="caption-headline"
+              onChange={(e) => app.setCaption({ headline: e.target.value }, "caption:headline")}
+              onKeyDown={(e) => e.stopPropagation()}
+            />
+          </label>
+          <label className="input">
+            <span className="sr-only">Caption subhead</span>
+            <input
+              value={cap.subhead}
+              placeholder="Subhead (optional)"
+              data-testid="caption-subhead"
+              onChange={(e) => app.setCaption({ subhead: e.target.value }, "caption:subhead")}
+              onKeyDown={(e) => e.stopPropagation()}
+            />
+          </label>
+          <div className="caption-row">
+            <Segmented
+              label="Caption font"
+              value={cap.font}
+              onChange={(font) => app.setCaption({ font })}
+              options={[
+                { value: "display", label: "Display" },
+                { value: "sans", label: "Sans" },
+              ]}
+            />
+            <Segmented
+              label="Caption alignment"
+              value={cap.align}
+              onChange={(align) => app.setCaption({ align })}
+              options={[
+                {
+                  value: "center",
+                  label: "",
+                  icon: <Icon name="alignCenter" size="sm" />,
+                  title: "Centre",
+                },
+                {
+                  value: "left",
+                  label: "",
+                  icon: <Icon name="alignLeft" size="sm" />,
+                  title: "Left",
+                },
+              ]}
+            />
+            <ColourButton
+              className={`colour-dot${cap.color === "auto" ? " auto" : ""}`}
+              value={cap.color === "auto" ? "#2a1f1a" : cap.color}
+              label="Caption colour"
+              onChange={(c) => app.setCaption({ color: c }, "caption:color")}
+            />
+          </div>
+          <Slider
+            label="Text size"
+            value={Math.round(cap.size * 100)}
+            min={70}
+            max={140}
+            stops={[{ value: 100, label: "1×" }]}
+            format={(v) => `${Math.round(v)}%`}
+            onChange={(v) => app.setCaption({ size: v / 100 }, "caption:size")}
+          />
+          {cap.color !== "auto" && (
+            <button
+              type="button"
+              className="link quiet"
+              onClick={() => app.setCaption({ color: "auto" })}
+            >
+              Match the background
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export const LayoutTray = memo(function LayoutTray({ bare = false }: { bare?: boolean }) {
+  const app = useApp();
+  const padding = useScene((s) => s.scene.canvas.padding);
+  const isImage = useScene((s) => s.scene.content.kind === "image");
+  const mode = useUi((s) => s.mode);
+  const card = useScene((s) => s.scene.card);
+  const style = useScene((s) => s.scene.meta.stylePresetId);
+  const custom = useUi((s) => s.customPresets);
+  const [tilt, setTilt] = useState(false);
+  const frame = resolveFrame(card.frame.id);
+  const usesRadius = frame ? frame.kind.usesCardRadius !== false : true;
+  const supportsInset = frame ? frame.kind.supportsInset !== false : true;
+  const t = card.tilt;
+  const tilted = t.rotateX !== 0 || t.rotateY !== 0 || t.rotateZ !== 0;
+  const strength = Math.round(card.shadow.strength * 50);
+
+  const reset = () => {
+    const patch = style
+      ? (getStylePreset(style)?.patch ?? custom.find((p) => p.id === style)?.patch)
+      : undefined;
+    if (!patch) return;
+    app.store.update((s) => ({
+      ...s,
+      canvas: {
+        ...s.canvas,
+        padding: patch.canvas?.padding ?? s.canvas.padding,
+        anchor: patch.canvas?.anchor ?? "center",
+        bleed: patch.canvas?.bleed ?? 0,
+      },
+      card: {
+        ...s.card,
+        radius: patch.card?.radius ?? s.card.radius,
+        shadow: { ...s.card.shadow, ...patch.card?.shadow },
+        border: { ...s.card.border, ...patch.card?.border },
+        inset: { ...s.card.inset, ...patch.card?.inset },
+        tilt: { ...s.card.tilt, ...patch.card?.tilt },
+        transform: { ...s.card.transform, ...patch.card?.transform },
+      },
+    }));
+    app.announce(`Layout reset to ${styleName(style, custom)}`);
+  };
+
+  const setTiltPreset = (x: number, y: number, z: number, perspective?: number) =>
+    app.store.update(
+      (s) => ({
+        ...s,
+        card: {
+          ...s.card,
+          tilt: {
+            ...s.card.tilt,
+            rotateX: x,
+            rotateY: y,
+            rotateZ: z,
+            ...(perspective ? { perspective } : {}),
+          },
+        },
+      }),
+      { label: "Camera angle" },
+    );
+
+  return (
+    <section className="tray" aria-labelledby="t-layout" data-testid="layout-tray">
+      {!bare && (
+        <div className="tray-head">
+          <TrayTitle id="t-layout">
+            Card
+            <OverrideDot group="layout" />
+          </TrayTitle>
+          <OverrideReset group="layout">
+            <button type="button" className="link quiet" onClick={reset}>
+              Reset
+            </button>
+          </OverrideReset>
+        </div>
+      )}
+      <Slider
+        label="Padding"
+        value={padding}
+        min={0}
+        max={160}
+        typedMax={400}
+        stops={PAD_STOPS}
+        valueText={(v) => `${Math.round(v)}, ${padName(v)}`}
+        onChange={(v) => app.set(["canvas", "padding"], v)}
+      />
+      <Slider
+        label="Corners"
+        value={card.radius}
+        min={0}
+        max={48}
+        typedMax={200}
+        stops={RADIUS_STOPS}
+        disabled={!usesRadius}
+        onChange={(v) => app.set(["card", "radius"], v)}
+      />
+      {!usesRadius && <p className="note">Corners are set by the device frame.</p>}
+      {isImage && <PositionControls />}
+      {isImage && mode === "screenshot" && <CaptionControls />}
+      <div className="sub" style={{ marginTop: 14 }}>
+        Shadow
+      </div>
+      <div className="opts" role="radiogroup" aria-label="Shadow">
+        {SHADOWS.map((s) => {
+          const on = card.shadow.preset === s.id || (s.id === "none" && card.shadow.strength === 0);
+          return (
+            <button
+              key={s.id}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              className={`opt${on ? " on" : ""}`}
+              onClick={() =>
+                app.store.update((sc) => ({
+                  ...sc,
+                  card: {
+                    ...sc.card,
+                    shadow: {
+                      ...sc.card.shadow,
+                      preset: s.id,
+                      strength:
+                        s.id === "none" ? sc.card.shadow.strength : sc.card.shadow.strength || 1,
+                    },
+                  },
+                }))
+              }
+            >
+              <Icon name={s.icon} />
+              {s.label}
+            </button>
+          );
+        })}
+      </div>
+      <div style={{ marginTop: 6 }}>
+        <Slider
+          label="Strength"
+          value={strength}
+          min={0}
+          max={100}
+          disabled={card.shadow.preset === "none"}
+          onChange={(v) => app.set(["card", "shadow", "strength"], v / 50)}
+        />
+      </div>
+      <div className="toggle-row">
+        <span className="label" id="lbl-border">
+          Border
+        </span>
+        <ColourButton
+          value={card.border.color}
+          alpha
+          label="Border colour"
+          onChange={(c) => app.set(["card", "border", "color"], c, "border-color")}
+        />
+        <Switch
+          checked={card.border.width > 0}
+          label="Border"
+          onChange={(v) => app.set(["card", "border", "width"], v ? 10 : 0)}
+        />
+      </div>
+      {card.border.width > 0 && (
+        <Slider
+          label="Width"
+          value={card.border.width}
+          min={1}
+          max={40}
+          onChange={(v) => app.set(["card", "border", "width"], v, "border-width")}
+        />
+      )}
+      <div className="toggle-row">
+        <span className="label">Inset plate</span>
+        {card.inset.width > 0 && supportsInset && (
+          <ColourButton
+            value={card.inset.color === "auto" ? "#ffffff" : card.inset.color}
+            label="Inset colour"
+            onChange={(c) => app.set(["card", "inset", "color"], c, "inset-color")}
+          />
+        )}
+        <Switch
+          checked={card.inset.width > 0 && supportsInset}
+          label="Inset plate"
+          disabled={!supportsInset}
+          onChange={(v) => app.set(["card", "inset", "width"], v ? 24 : 0)}
+        />
+      </div>
+      {card.inset.width > 0 && supportsInset && (
+        <>
+          <Slider
+            label="Plate"
+            value={card.inset.width}
+            min={4}
+            max={120}
+            onChange={(v) => app.set(["card", "inset", "width"], v, "inset-width")}
+          />
+          {card.inset.color !== "auto" && (
+            <button
+              type="button"
+              className="link quiet"
+              style={{ marginLeft: 80 }}
+              onClick={() => app.set(["card", "inset", "color"], "auto")}
+            >
+              Match the screenshot’s edge
+            </button>
+          )}
+        </>
+      )}
+      <div className="hr" />
+      <button
+        type="button"
+        className="disclosure"
+        aria-expanded={tilt}
+        aria-controls="tilt-panel"
+        onClick={() => setTilt((o) => !o)}
+      >
+        3D tilt &amp; position
+        <span className="meta">
+          {tilted
+            ? `${Math.round(t.rotateX)}° · ${Math.round(t.rotateY)}°${t.rotateZ ? ` · ${Math.round(t.rotateZ)}°` : ""}`
+            : "flat"}
+          <Icon name="chevronDown" size="sm" />
+        </span>
+      </button>
+      {tilt && (
+        <div id="tilt-panel" style={{ paddingTop: 2 }}>
+          <div className="angle-grid" role="group" aria-label="Camera angles">
+            {ANGLES.map(([label, x, y, z, d]) => {
+              const on = t.rotateX === x && t.rotateY === y && t.rotateZ === z;
+              return (
+                <button
+                  key={label}
+                  type="button"
+                  className={`angle${on ? " on" : ""}`}
+                  aria-pressed={on}
+                  title={label}
+                  onClick={() => setTiltPreset(x, y, z, d)}
+                >
+                  <span className="angle-view" aria-hidden="true">
+                    <i
+                      style={{
+                        transform: `perspective(${Math.round(d * 34)}px) rotateX(${x}deg) rotateY(${y}deg) rotateZ(${z}deg)`,
+                      }}
+                    />
+                  </span>
+                  <span className="angle-name">{label}</span>
+                </button>
+              );
+            })}
+          </div>
+          <Slider
+            label="Tilt X"
+            value={t.rotateX}
+            min={-45}
+            max={45}
+            centered
+            format={(v) => `${Math.round(v)}°`}
+            onChange={(v) => app.set(["card", "tilt", "rotateX"], v)}
+          />
+          <Slider
+            label="Tilt Y"
+            value={t.rotateY}
+            min={-45}
+            max={45}
+            centered
+            format={(v) => `${Math.round(v)}°`}
+            onChange={(v) => app.set(["card", "tilt", "rotateY"], v)}
+          />
+          <Slider
+            label="Rotate"
+            value={t.rotateZ}
+            min={-30}
+            max={30}
+            centered
+            format={(v) => `${Math.round(v)}°`}
+            onChange={(v) => app.set(["card", "tilt", "rotateZ"], v)}
+          />
+          <Slider
+            label="Depth"
+            value={t.perspective}
+            min={1.2}
+            max={10}
+            step={0.1}
+            disabled={!tilted}
+            format={(v) => v.toFixed(1)}
+            valueText={(v) => `camera distance ${v.toFixed(1)}`}
+            onChange={(v) => app.set(["card", "tilt", "perspective"], v)}
+          />
+          <Slider
+            label="Size"
+            value={Math.round(card.transform.scale * 100)}
+            min={20}
+            max={200}
+            format={(v) => `${Math.round(v)}%`}
+            onChange={(v) => app.set(["card", "transform", "scale"], v / 100)}
+          />
+          <Slider
+            label="Move X"
+            value={Math.round(card.transform.offsetX * 100)}
+            min={-50}
+            max={50}
+            centered
+            format={(v) => `${Math.round(v)}`}
+            onChange={(v) => app.set(["card", "transform", "offsetX"], v / 100)}
+          />
+          <Slider
+            label="Move Y"
+            value={Math.round(card.transform.offsetY * 100)}
+            min={-50}
+            max={50}
+            centered
+            format={(v) => `${Math.round(v)}`}
+            onChange={(v) => app.set(["card", "transform", "offsetY"], v / 100)}
+          />
+        </div>
+      )}
+    </section>
+  );
+});
+
+// ---------------------------------------------------------------------------
+// Frame
+// ---------------------------------------------------------------------------
+
+export const FRAMES: { id: string; label: string; short: string; icon: IconName }[] = [
+  { id: "none", label: "No frame", short: "None", icon: "frameNone" },
+  { id: "macos", label: "macOS window", short: "macOS", icon: "frameMac" },
+  { id: "browser", label: "Browser", short: "Browser", icon: "frameBrowser" },
+  { id: "phone", label: "Phone", short: "Phone", icon: "framePhone" },
+  { id: "tablet", label: "Tablet", short: "Tablet", icon: "frameTablet" },
+  { id: "laptop", label: "Laptop", short: "Laptop", icon: "frameLaptop" },
+  {
+    id: "canvas",
+    label: "Design canvas",
+    short: "Canvas",
+    icon: "frameCanvas",
+  },
+];
+
+export const FrameTray = memo(function FrameTray({ bare = false }: { bare?: boolean }) {
+  const app = useApp();
+  const frame = useScene((s) => s.scene.card.frame);
+  const device = ["phone", "tablet", "laptop"].includes(frame.id);
+  const label = FRAMES.find((f) => f.id === frame.id)?.label ?? frame.id;
+  const onKey = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+    if (!d) return;
+    e.preventDefault();
+    const i = FRAMES.findIndex((f) => f.id === frame.id);
+    const next = FRAMES[(i + d + FRAMES.length) % FRAMES.length]!;
+    app.set(["card", "frame", "id"], next.id);
+    // React clears currentTarget once the handler returns: keep the row for the next frame.
+    const row = e.currentTarget;
+    focusNextFrame(() => row.querySelector<HTMLButtonElement>(`[data-frame="${next.id}"]`));
+  };
+  return (
+    <section className="tray" aria-labelledby="t-frame" data-testid="frame-tray">
+      {!bare && (
+        <div className="tray-head">
+          <TrayTitle id="t-frame">
+            Frame
+            <OverrideDot group="frame" />
+          </TrayTitle>
+          <OverrideReset group="frame">
+            <span className="meta">{frame.id === "none" ? "None" : label}</span>
+          </OverrideReset>
+        </div>
+      )}
+      <div className="frames" role="radiogroup" aria-label="Frame" onKeyDown={onKey}>
+        {FRAMES.map((f) => (
+          <button
+            key={f.id}
+            type="button"
+            role="radio"
+            data-frame={f.id}
+            aria-checked={frame.id === f.id}
+            tabIndex={frame.id === f.id ? 0 : -1}
+            className={`tile labelled${frame.id === f.id ? " on" : ""}`}
+            aria-label={f.label}
+            title={f.label}
+            onPointerEnter={(e) => {
+              if (e.pointerType !== "mouse" || frame.id === f.id) return;
+              app.previewScene(
+                (s) => ({ ...s, card: { ...s.card, frame: { ...s.card.frame, id: f.id } } }),
+                f.label,
+              );
+            }}
+            onPointerLeave={() => app.clearPreview()}
+            onClick={() => app.set(["card", "frame", "id"], f.id)}
+          >
+            <Icon name={f.icon} />
+            <span className="tile-label" aria-hidden="true">
+              {f.short}
+            </span>
+          </button>
+        ))}
+      </div>
+      {frame.id !== "none" && (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr",
+            gap: 8,
+            marginTop: 10,
+          }}
+        >
+          <Segmented
+            label="Frame theme"
+            className="theme-seg"
+            value={frame.theme}
+            onChange={(v) => app.set(["card", "frame", "theme"], v)}
+            options={[
+              {
+                value: "auto",
+                label: "Auto",
+                icon: <Icon name="sparkle" size="xs" />,
+                title: "Matches your screenshot: dark apps get a dark window",
+              },
+              { value: "light", label: "Light", icon: <Icon name="sun" size="xs" /> },
+              { value: "dark", label: "Dark", icon: <Icon name="moon" size="xs" /> },
+            ]}
+          />
+          {frame.id === "macos" && (
+            <label className="input">
+              <span className="sr-only">Window title</span>
+              <input
+                placeholder="Window title"
+                value={frame.title}
+                onChange={(e) => app.set(["card", "frame", "title"], e.target.value)}
+                onKeyDown={(e) => e.stopPropagation()}
+              />
+            </label>
+          )}
+          {frame.id === "canvas" && (
+            <label className="input">
+              <span className="sr-only">Frame name</span>
+              <input
+                placeholder="Frame 1"
+                value={frame.title}
+                onChange={(e) => app.set(["card", "frame", "title"], e.target.value)}
+                onKeyDown={(e) => e.stopPropagation()}
+              />
+            </label>
+          )}
+          {frame.id === "browser" && (
+            <label className="input">
+              <span className="sr-only">Address bar URL</span>
+              <input
+                placeholder="yoursite.com"
+                value={frame.url}
+                onChange={(e) => app.set(["card", "frame", "url"], e.target.value)}
+                onKeyDown={(e) => e.stopPropagation()}
+              />
+            </label>
+          )}
+          {device && (
+            <Segmented
+              label="Camera"
+              value={frame.camera === false ? "none" : "dot"}
+              onChange={(v) => app.set(["card", "frame", "camera"], v === "dot")}
+              options={[
+                { value: "dot", label: "Camera" },
+                { value: "none", label: "None" },
+              ]}
+            />
+          )}
+        </div>
+      )}
+      {frame.id === "canvas" && (
+        <div className="toggle-row" style={{ marginTop: 4 }}>
+          <span className="label">Show pixel size</span>
+          <Switch
+            checked={frame.sizeTag !== false}
+            label="Show pixel size"
+            onChange={(v) => app.set(["card", "frame", "sizeTag"], v)}
+          />
+        </div>
+      )}
+      {frame.id === "macos" && (
+        <div className="toggle-row" style={{ marginTop: 4 }}>
+          <span className="label">Colour window buttons</span>
+          <Switch
+            checked={frame.lights !== "mono"}
+            label="Colour window buttons"
+            onChange={(v) => app.set(["card", "frame", "lights"], v ? "color" : "mono")}
+          />
+        </div>
+      )}
+    </section>
+  );
+});
+
+// ---------------------------------------------------------------------------
+// Inspector
+// ---------------------------------------------------------------------------
+
+function ModeTrays() {
+  const mode = useUi((s) => s.mode);
+  const video = useScene((s) => isVideoScene(s.scene));
+  if (mode === "code")
+    return (
+      <>
+        <CodeTray />
+        <ThemesTray />
+        <WindowTray />
+        <BackgroundTray />
+        <LayoutTray />
+        <MotionTray />
+      </>
+    );
+  if (mode === "appstore")
+    return (
+      <>
+        <SlideTray />
+        <SetStylesTray />
+        <SetTray />
+        <HeadlineTray />
+        <BackgroundTray />
+        <FrameTray />
+        <LayoutTray />
+      </>
+    );
+  if (mode === "quote")
+    return (
+      <>
+        <QuoteTray />
+        <QuotePresetsTray />
+        <QuoteTypeTray />
+        <CardTray />
+        <BackgroundTray />
+        <LayoutTray />
+        <MotionTray />
+      </>
+    );
+  if (mode === "post")
+    return (
+      <>
+        <PostTray />
+        <PostStylesTray />
+        <CardTray />
+        <BackgroundTray />
+        <LayoutTray />
+        <MotionTray />
+      </>
+    );
+  // A recording's trim and sound come first: they're what you reach for first.
+  if (video)
+    return (
+      <>
+        <MotionTray />
+        <StylesTray />
+        <BackgroundTray />
+        <LayoutTray />
+        <FrameTray />
+      </>
+    );
+  return (
+    <>
+      <StylesTray />
+      <Device3DTray />
+      <CutoutTray />
+      <BackgroundTray />
+      {/* How many screens and how they're arranged, then the card's own layout. */}
+      <ScreensTray />
+      <LayoutTray />
+      <FrameTray />
+      {/* Motion is used least often: last, so Background and Layout stay above the fold (REVIEW r2 N9). */}
+      <MotionTray />
+    </>
+  );
+}
+
+export function Inspector() {
+  const tool = useUi((s) => s.tool);
+  const selection = useScene((s) => s.selection);
+  const annotating = tool !== "select" || !!selection;
+  return (
+    <aside
+      className="inspector"
+      aria-label={annotating ? "Annotation settings" : "Style settings"}
+      data-testid="inspector"
+    >
+      {annotating ? (
+        <div className="inspector-pane" key="ann">
+          <AnnotationInspector />
+        </div>
+      ) : (
+        <div className="inspector-pane" key="style">
+          <BatchScope />
+          <ModeTrays />
+          <div className="foot-note">Rendered on your device · nothing is uploaded</div>
+        </div>
+      )}
+    </aside>
+  );
+}

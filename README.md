@@ -8,7 +8,7 @@ Live at **https://www.browserailab.com**. Built with Next.js (App Router) and de
 |---|---|
 | **Social** | Bold/italic text styler · Social image resizer |
 | **PDF** | Merge · Split · Organize · Compress · Images → PDF · PDF → Images · PDF → Text · Watermark & page numbers · Ask a PDF (AI Q&A) · Scan OCR (Florence-2) |
-| **Image** | Background remover (RMBG-1.4) · 2× upscaler (Swin2SR) · Image to text (Florence-2) · Alt text (Florence-2) · Object detection (DETR) · Photo tagger (CLIP) · Depth map (Depth Anything V2) · Look & Ask (LFM2.5-VL) |
+| **Image** | Background remover (RMBG-1.4) · 2× upscaler (Swin2SR) · Image to text (Florence-2) · Alt text (Florence-2) · Object detection (DETR) · Photo tagger (CLIP) · Depth map (Depth Anything V2) · Look & Ask (LFM2.5-VL) · Screenshot Studio: beautifier, mockups, 3D devices, AI cut-out, code images, quote cards, App Store sets ([details](src/tools/screenshot/README.md)) |
 | **Audio** | Vocal remover & stem splitter (Demucs v4) · Speech to text + subtitles (Whisper) · AI sound effects (Stable Audio Open Small) · Text to speech (Kokoro-82M, Hindi Piper) · Sound identifier (AST) |
 | **Text** | Translator (NLLB-200) · Summarizer (DistilBART) · Document Q&A · Emotion detector (GoEmotions) · PII redactor (BERT NER) |
 | **Assistants** | Private chat (Llama 3.2 1B) · Rewriter (Qwen2.5-0.5B) |

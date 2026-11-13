@@ -1,0 +1,1057 @@
+/* Screenshot Studio — Browser AI Lab skin.
+   Loaded after the editor's component styles; everything here is scoped to
+   the studio root (.sst) and its portal layer, so no other page is touched. */
+
+/* ---------- Root: embedded in the tool page, or filling the window ---------- */
+.sst {
+  position: relative;
+  font-family: var(--sc-font-ui);
+  color: var(--sc-ink);
+}
+/* The frame is the size container the editor's responsive rules query, so
+   they follow the space the editor actually has, not the window. */
+.sst-frame {
+  container: sst / size;
+  height: clamp(600px, calc(100dvh - 7rem), 940px);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--sc-paper);
+}
+.sst-frame > .sst-pane {
+  height: 100%;
+}
+.sst-frame[data-fullscreen] {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  height: 100dvh;
+  border: 0;
+  border-radius: 0;
+}
+.sst-layer {
+  position: relative;
+  z-index: 80;
+}
+@media (max-width: 767px) {
+  .sst-frame {
+    height: calc(100dvh - 5rem);
+    min-height: 560px;
+    margin-inline: -16px;
+    border-inline: 0;
+    border-radius: 0;
+  }
+}
+
+@layer components {
+  :where(.sst) .app,
+  :where(.sst) .m {
+    height: 100%;
+  }
+
+  /* ---------- Header ---------- */
+  :where(.sst) .header {
+    border-bottom: 1px solid var(--rule);
+    background: var(--card);
+  }
+  :where(.sst) .brand {
+    gap: 10px;
+  }
+  :where(.sst) .brand .mark {
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    background: var(--ink);
+    color: var(--paper);
+  }
+  :where(.sst) .brand .word {
+    font: 400 23px/1 var(--sc-font-display);
+    letter-spacing: 0;
+    margin-top: 0;
+  }
+  :where(.sst) .menu-item.credit {
+    font-size: 12px;
+    color: var(--sc-ink-3);
+  }
+
+  /* ---------- Buttons: ink with a hard accent offset, like the Lab's CTAs ---------- */
+  :where(.sst) .btn-primary {
+    background: var(--ink);
+    background-image: none;
+    color: var(--paper);
+    box-shadow: 3px 3px 0 var(--accent);
+    padding-bottom: 0;
+    text-shadow: none;
+    transition:
+      transform var(--sc-dur-fast) var(--sc-ease-out),
+      box-shadow var(--sc-dur-fast) var(--sc-ease-out),
+      background var(--sc-dur-fast),
+      color var(--sc-dur-fast);
+  }
+  :where(.sst) .btn-primary:hover:not(:disabled) {
+    background: var(--accent);
+    background-image: none;
+    color: var(--accent-ink);
+    box-shadow: 3px 3px 0 var(--ink);
+  }
+  :where(.sst) .btn-primary:active:not(:disabled),
+  :where(.sst) .btn-primary.pressed {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0 var(--accent);
+    padding-bottom: 0;
+  }
+  :where(.sst) .btn-primary:disabled {
+    background: var(--paper-2);
+    color: var(--sc-ink-4);
+    box-shadow: 0 0 0 1px var(--rule);
+  }
+  :where(.sst) .btn-primary .tag {
+    background: color-mix(in srgb, currentColor 16%, transparent);
+    border-radius: 4px;
+  }
+  :where(.sst) .split .btn-primary:last-child,
+  :where(.sst) .btn-sm.btn-primary,
+  :where(.sst) .split .btn-primary:last-child:active:not(:disabled),
+  :where(.sst) .split .btn-primary.pressed:last-child {
+    padding-bottom: 0;
+  }
+  :where(.sst) .split .btn-primary:last-child {
+    margin-left: 2px;
+  }
+  :where(.sst) .btn-secondary:hover:not(:disabled) {
+    box-shadow: 0 0 0 1px var(--ink);
+  }
+  :where(.sst) .btn-xl {
+    border-radius: 8px;
+  }
+  :where(.sst) .icon-btn.sm {
+    border-radius: 6px;
+  }
+
+  /* ---------- Keys ---------- */
+  :where(.sst) .kbd {
+    background: var(--paper);
+    box-shadow: inset 0 0 0 1px var(--rule);
+    color: var(--ink-2);
+  }
+  :where(.sst) .kbd-lg,
+  :root[data-theme="dark"] :where(.sst) .kbd-lg {
+    border-radius: 8px;
+    /* The system face has a full-size ⌘; Space Grotesk has none. The size is
+       restated because controls.css sets every .kbd to 11px after ui.css. */
+    font-family: system-ui, -apple-system, var(--sc-font-ui);
+    font-size: 22px;
+    font-weight: 500;
+    background: var(--card);
+    box-shadow:
+      0 0 0 1px var(--ink),
+      3px 3px 0 var(--rule);
+    padding: 0 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) :where(.sst) .kbd-lg {
+      box-shadow:
+        0 0 0 1px var(--ink),
+        3px 3px 0 var(--rule);
+    }
+  }
+
+  /* ---------- Chips ---------- */
+  :where(.sst) .chip.on,
+  :where(.sst) .chip[aria-expanded="true"] {
+    box-shadow: none;
+  }
+
+  /* ---------- Stage: the Lab's dotted notebook paper ---------- */
+  :where(.sst) .stage {
+    margin-left: 0;
+    border-radius: 0;
+    background-color: var(--paper);
+    background-image: radial-gradient(var(--rule) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+
+  /* ---------- Inspector: ruled column, kicker headings ---------- */
+  :where(.sst) .inspector {
+    border-left: 1px solid var(--rule);
+    background: var(--paper);
+    padding-top: var(--sc-space-3);
+  }
+  :where(.sst) .tray {
+    border-radius: 12px;
+  }
+  :where(.sst) .tray-head h2,
+  :where(.sst) .tray-head h3 {
+    font: 500 11px/16px var(--sc-font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink-3);
+  }
+  :where(.sst) .link {
+    text-underline-offset: 4px;
+  }
+  :where(.sst) .tray-head .head-links,
+  :where(.sst) .tray-head .link {
+    white-space: nowrap;
+  }
+  @container sst (max-width: 1279px) {
+    :where(.sst) .tray-head .head-links .kbd {
+      display: none;
+    }
+  }
+
+  /* Space Grotesk runs wider than the editor's original face: give text room. */
+  :where(.sst) .auto-row {
+    flex-wrap: wrap;
+    row-gap: 8px;
+    border-radius: 10px;
+  }
+  :where(.sst) .auto-row .txt {
+    min-width: 96px;
+  }
+  :where(.sst) .auto-row .sws {
+    margin-left: auto;
+  }
+  :where(.sst) .slider .stops b {
+    font: 500 8px/1 var(--sc-font-ui);
+    letter-spacing: -0.01em;
+  }
+  :where(.sst) .paste-card .keys .or {
+    width: 168px;
+  }
+  :where(.sst) .foot-note {
+    font-family: var(--sc-font-mono);
+    font-size: 11px;
+  }
+
+  /* ---------- Segmented: ink pill, like the Lab's Segmented ---------- */
+  :where(.sst) .seg {
+    background: var(--paper);
+    box-shadow: inset 0 0 0 1px var(--rule);
+    border-radius: 8px;
+  }
+  :where(.sst) .seg .pill {
+    background: var(--ink);
+    box-shadow: none;
+    border-radius: 6px;
+  }
+  :where(.sst) .seg button.on,
+  :where(.sst) .seg button.on:hover:not(:disabled) {
+    color: var(--paper);
+  }
+
+  /* ---------- Tiles ---------- */
+  :where(.sst) .preset .thumb {
+    border-radius: 8px;
+    box-shadow: 0 0 0 1px var(--rule);
+  }
+  :where(.sst) .preset .name {
+    font-weight: 500;
+  }
+
+  /* ---------- Display headings: the Lab's serif ---------- */
+  :where(.sst) .jar-head h2,
+  :where(.sst) .dialog-head h2,
+  :where(.sst) .m-empty .m-title,
+  :where(.sst) .m-export h2,
+  :where(.sst) .export-head h2 {
+    font-family: var(--sc-font-display);
+    font-weight: 400;
+    letter-spacing: 0;
+    font-size: 32px;
+    line-height: 1.05;
+  }
+  :where(.sst) .ann-head .ttl {
+    font: 400 22px/1.1 var(--sc-font-display);
+    letter-spacing: 0;
+  }
+  :where(.sst) .avatar-pick,
+  :where(.sst) .theme-dot {
+    font-family: var(--sc-font-ui);
+  }
+
+  /* ---------- Empty state: the Lab's drop zone ---------- */
+  :where(.sst) .paste-card {
+    background-color: var(--card);
+    background-image: radial-gradient(var(--rule) 1px, transparent 1px);
+    background-size: 22px 22px;
+    border: 2px dashed var(--rule);
+    border-radius: 14px;
+    box-shadow: none;
+    transition:
+      border-color var(--sc-dur-fast),
+      opacity 160ms var(--sc-ease-out),
+      transform 160ms var(--sc-ease-out);
+  }
+  :where(.sst) .paste-card:hover {
+    border-color: var(--ink);
+  }
+  :where(.sst) .paste-card.is-drag {
+    border-color: var(--accent);
+    background-color: var(--accent-soft);
+    filter: none;
+  }
+  :where(.sst) .paste-card .title {
+    font: 400 44px/1 var(--sc-font-display);
+    letter-spacing: 0;
+  }
+  :where(.sst) .paste-card .lede {
+    font-size: 14.5px;
+  }
+  :where(.sst) .paste-card .row {
+    border-top: 1px solid var(--rule);
+  }
+  :where(.sst) .privacy,
+  :where(.sst) .privacy-line {
+    background: transparent;
+    font-family: var(--sc-font-mono);
+    font-size: 11px;
+    color: var(--ink-3);
+  }
+  :where(.sst) .fan .f {
+    border-radius: 8px;
+    box-shadow:
+      0 0 0 1px var(--rule),
+      4px 4px 0 color-mix(in srgb, var(--ink) 10%, transparent);
+  }
+  :where(.sst) .sample {
+    border-radius: 6px;
+  }
+  :where(.sst) .empty-links {
+    font-family: var(--sc-font-mono);
+    font-size: 11px;
+    color: var(--ink-3);
+  }
+  :where(.sst) .mode-pick {
+    border-radius: 10px;
+  }
+
+  /* ---------- Drop veil ---------- */
+  :where(.sst) .drop-veil {
+    inset: 12px;
+    border-radius: 14px;
+    border-width: 2px;
+  }
+  :where(.sst) .drop-veil .msg {
+    border-radius: 10px;
+    font: 400 26px/1 var(--sc-font-display);
+    letter-spacing: 0;
+    box-shadow: 4px 4px 0 var(--accent);
+  }
+  :where(.sst) .drop-veil .veil-icon {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    border: 1px solid currentColor;
+  }
+
+  /* ---------- Sheets, dialogs, popovers ---------- */
+  :where(.sst) .sheet {
+    border-radius: 14px;
+  }
+  :where(.sst) .popover {
+    border-radius: 10px;
+  }
+
+  /* ---------- Toast thumbnail (no wrapper art) ---------- */
+  :where(.sst) .wrap-thumb .body {
+    border-radius: 6px;
+    box-shadow: 0 0 0 1px var(--rule);
+  }
+
+  /* ---------- Remove background ---------- */
+  :where(.sst) .cutout-tray {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  :where(.sst) .cutout-tray .toggle-row {
+    margin: 0;
+    gap: 12px;
+  }
+  :where(.sst) .cutout-tray .toggle-row .label {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  :where(.sst) .cutout-tray .toggle-row .label small {
+    font-size: 11.5px;
+    font-weight: 400;
+    line-height: 15px;
+    color: var(--ink-3);
+  }
+  :where(.sst) .cutout-run {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  :where(.sst) .cutout-run {
+    height: 40px;
+  }
+  :where(.sst) .cutout-meter {
+    height: 3px;
+    border-radius: 2px;
+    background: var(--rule);
+    overflow: hidden;
+  }
+  :where(.sst) .cutout-meter i {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+    transition: width 200ms linear;
+  }
+  :where(.sst) .cutout-tray .link {
+    align-self: flex-start;
+  }
+
+  /* ---------- Trays: numbered notebook sections that fold away ---------- */
+  :where(.sst) .inspector-pane,
+  :where(.sst) .m-body {
+    counter-reset: tray;
+  }
+  :where(.sst) .tray-title {
+    margin: 0;
+    min-width: 0;
+  }
+  :where(.sst) .tray-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 2px 4px 2px 0;
+    border-radius: 4px;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    color: inherit;
+    text-align: left;
+  }
+  :where(.sst) .tray-toggle:hover {
+    color: var(--ink);
+  }
+  :where(.sst) .tray-num::before {
+    counter-increment: tray;
+    content: counter(tray, decimal-leading-zero);
+    color: var(--accent);
+  }
+  :where(.sst) .tray-chev {
+    width: 11px;
+    height: 11px;
+    opacity: 0.6;
+    transition: transform var(--sc-dur-fast) var(--sc-ease-out);
+  }
+  :where(.sst) .tray[data-folded] .tray-chev {
+    transform: rotate(-90deg);
+  }
+  :where(.sst) .tray[data-folded] > :not(.tray-head) {
+    display: none !important;
+  }
+  :where(.sst) .tray[data-folded] .tray-head {
+    margin-bottom: 0;
+  }
+  :where(.sst) .tray-head {
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--rule);
+  }
+  :where(.sst) .tray[data-folded] .tray-head {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+
+  /* ---------- Header: mode tabs with the Lab's ink pill, chip in the flow ---------- */
+  :where(.sst) .mode-switch {
+    background: var(--paper);
+    box-shadow: inset 0 0 0 1px var(--rule);
+    border-radius: 8px;
+  }
+  :where(.sst) .mode-switch button {
+    border-radius: 6px;
+    font-weight: 500;
+  }
+  :where(.sst) .mode-switch .ms-pill {
+    background: var(--ink);
+    box-shadow: none;
+    border-radius: 6px;
+  }
+  :where(.sst) .mode-switch button.on,
+  :where(.sst) .mode-switch button.on svg {
+    color: var(--paper);
+  }
+  @container sst (min-width: 1640px) {
+    :where(.sst) .mode-switch button:not(.on) .lbl {
+      display: inline;
+    }
+  }
+  @container sst (max-width: 1639px) {
+    :where(.sst) .mode-switch button:not(.on) .lbl {
+      display: none;
+    }
+  }
+  :where(.sst) .header .centre {
+    position: static;
+    transform: none;
+    margin-left: var(--sc-space-2);
+  }
+  :where(.sst) .fs-btn {
+    margin-left: 6px;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+  }
+  :where(.sst) .fs-btn:hover:not(:disabled),
+  :where(.sst) .fs-btn.on {
+    border-color: var(--ink);
+    background: var(--card);
+    color: var(--ink);
+  }
+
+  /* ---------- Dock and zoom: squared instrument panels ---------- */
+  :where(.sst) .dock,
+  :where(.sst) .zoom {
+    border-radius: 10px;
+    box-shadow:
+      0 0 0 1px var(--ink),
+      3px 3px 0 var(--rule);
+  }
+
+  /* ---------- Start card: drop icon and numbered steps ---------- */
+  :where(.sst) .paste-card {
+    padding: 30px 32px 22px;
+    margin-top: 0;
+  }
+  :where(.sst) .m-empty {
+    padding-top: 26px;
+    margin-top: 0;
+    border-radius: 14px;
+  }
+  :where(.sst) .lab-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  :where(.sst) .lab-head.compact {
+    margin-bottom: 12px;
+  }
+  :where(.sst) .lab-drop {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 999px;
+    border: 1px solid var(--ink);
+    background: var(--card);
+    color: var(--ink);
+    transform: rotate(-6deg);
+  }
+  :where(.sst) .lab-steps {
+    display: flex;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font: 500 11px/1 var(--sc-font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-3);
+  }
+  :where(.sst) .lab-steps li {
+    padding: 6px 9px;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: var(--paper);
+  }
+  :where(.sst) .lab-steps b {
+    color: var(--accent);
+    font-weight: 500;
+    margin-right: 4px;
+  }
+
+  /* ---------- Camera angle library ---------- */
+  :where(.sst) .angle-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  :where(.sst) .angle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 2px 5px;
+    border-radius: 8px;
+    box-shadow: inset 0 0 0 1px var(--rule);
+    background: var(--paper);
+    color: var(--ink-2);
+  }
+  :where(.sst) .angle:hover {
+    box-shadow: inset 0 0 0 1px var(--ink);
+    color: var(--ink);
+  }
+  :where(.sst) .angle.on {
+    background: var(--ink);
+    color: var(--paper);
+    box-shadow: none;
+  }
+  :where(.sst) .angle-view {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 30px;
+  }
+  :where(.sst) .angle-view i {
+    display: block;
+    width: 34px;
+    height: 22px;
+    border-radius: 3px;
+    background: linear-gradient(180deg, var(--accent) 0 5px, var(--card) 5px);
+    box-shadow: 0 0 0 1px currentColor;
+  }
+  :where(.sst) .angle-name {
+    font-size: 10px;
+    line-height: 12px;
+    white-space: nowrap;
+  }
+
+  /* ---------- Motion tiles for the added effects ---------- */
+  :where(.sst) .mtile:is(:hover, :focus-visible, .on) .mg-kenburns .mg-card {
+    animation: lab-mg-kenburns 4s var(--sc-ease-in-out) infinite alternate;
+  }
+  :where(.sst) .mtile:is(:hover, :focus-visible, .on) .mg-orbit .mg-card {
+    animation: lab-mg-orbit 3s var(--sc-ease-in-out) infinite;
+  }
+  :where(.sst) .mtile:is(:hover, :focus-visible, .on) .mg-rise .mg-card {
+    animation: lab-mg-rise 2.4s var(--sc-ease-out) infinite;
+  }
+  :where(.sst) .mtile:is(:hover, :focus-visible, .on) .mg-pop .mg-card {
+    animation: lab-mg-pop 2.2s var(--sc-ease-pop) infinite;
+  }
+  :where(.sst) .mtile:is(:hover, :focus-visible, .on) .mg-swing .mg-card {
+    animation: lab-mg-swing 2.4s var(--sc-ease-in-out) infinite;
+    transform-origin: 50% 0;
+  }
+  :where(.sst) .mtile:is(:hover, :focus-visible, .on) .mg-pullback .mg-card {
+    animation: lab-mg-pullback 2.6s var(--sc-ease-out) infinite;
+  }
+}
+
+@keyframes lab-mg-kenburns {
+  from { transform: scale(1) translate(4%, 3%); }
+  to { transform: scale(1.18) translate(-4%, -3%); }
+}
+@keyframes lab-mg-orbit {
+  0%, 100% { transform: rotateY(-28deg); }
+  50% { transform: rotateY(28deg) rotateX(6deg); }
+}
+@keyframes lab-mg-rise {
+  0% { transform: translateY(70%) rotateX(20deg); opacity: 0.3; }
+  55%, 100% { transform: none; opacity: 1; }
+}
+@keyframes lab-mg-pop {
+  0% { transform: scale(0.45) rotate(-6deg); opacity: 0.4; }
+  50%, 100% { transform: none; opacity: 1; }
+}
+@keyframes lab-mg-swing {
+  0%, 100% { transform: rotate(-4deg) rotateY(-8deg); }
+  50% { transform: rotate(4deg) rotateY(8deg); }
+}
+@keyframes lab-mg-pullback {
+  0% { transform: scale(1.7); }
+  60%, 100% { transform: none; }
+}
+
+/* ---------- 3D device studio ---------- */
+@layer components {
+  :where(.sst) .device3d-tray {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  :where(.sst) .device3d-open {
+    height: 40px;
+  }
+  :where(.sst) .device3d-tray .link {
+    align-self: flex-start;
+  }
+  :where(.sst) .device3d-dialog {
+    width: min(1080px, calc(100vw - 32px));
+  }
+  :where(.sst) .d3-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 290px;
+    min-height: 0;
+    flex: 1;
+    border-top: 1px solid var(--rule);
+  }
+  :where(.sst) .d3-view {
+    position: relative;
+    min-height: 420px;
+    height: min(620px, calc(100dvh - 200px));
+    background-color: var(--paper-2);
+    background-image: radial-gradient(var(--rule) 1px, transparent 1px);
+    background-size: 22px 22px;
+    cursor: grab;
+    touch-action: none;
+  }
+  :where(.sst) .d3-view:active {
+    cursor: grabbing;
+  }
+  :where(.sst) .d3-view canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  :where(.sst) .d3-loading {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font: 500 11px/1 var(--sc-font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink-3);
+  }
+  :where(.sst) .d3-error {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+  }
+  :where(.sst) .d3-side {
+    border-left: 1px solid var(--rule);
+    padding: 14px 16px 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: var(--card);
+  }
+  :where(.sst) .d3-side .sub {
+    margin: 10px 0 4px;
+    font: 500 10.5px/1 var(--sc-font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink-3);
+  }
+  :where(.sst) .d3-side .sub:first-child {
+    margin-top: 0;
+  }
+  :where(.sst) .d3-devices,
+  :where(.sst) .d3-views {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+  :where(.sst) .d3-devices .opt,
+  :where(.sst) .d3-views .opt {
+    height: 32px;
+    font-size: 12.5px;
+  }
+  :where(.sst) .d3-finishes {
+    display: flex;
+    gap: 8px;
+  }
+  :where(.sst) .d3-swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 18%, transparent);
+  }
+  :where(.sst) .d3-swatch.on {
+    box-shadow:
+      0 0 0 2px var(--card),
+      0 0 0 3.5px var(--ink);
+  }
+  :where(.sst) .d3-side .toggle-row {
+    margin: 4px 0 0;
+  }
+  :where(.sst) .d3-side .btn-primary {
+    margin-top: 12px;
+  }
+  @media (max-width: 760px) {
+    :where(.sst) .d3-body {
+      grid-template-columns: 1fr;
+    }
+    :where(.sst) .d3-view {
+      height: 46dvh;
+      min-height: 280px;
+    }
+    :where(.sst) .d3-side {
+      border-left: 0;
+      border-top: 1px solid var(--rule);
+    }
+  }
+}
+
+/* ---------- Header: studio actions ---------- */
+@layer components {
+  :where(.sst) .studio-actions {
+    display: flex;
+    gap: 6px;
+    margin-left: var(--sc-space-2);
+  }
+  :where(.sst) .studio-action {
+    height: 34px;
+    border-radius: 8px;
+    font-weight: 500;
+    box-shadow: inset 0 0 0 1px var(--ink);
+  }
+  :where(.sst) .studio-action svg {
+    color: var(--accent);
+  }
+  :where(.sst) .studio-action:disabled {
+    box-shadow: inset 0 0 0 1px var(--rule);
+    color: var(--ink-3);
+  }
+  :where(.sst) .studio-action:disabled svg {
+    color: inherit;
+  }
+  /* The header collapses in a fixed order as the editor narrows, so nothing
+     is ever pushed off the end (measured across 780–1700 px frames). */
+  :where(.sst) .header {
+    overflow: hidden;
+  }
+  :where(.sst) .header > * {
+    flex-shrink: 0;
+  }
+  :where(.sst) .header .spacer {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  :where(.sst) .header .copy-btn {
+    font-size: 0;
+    gap: 0;
+    padding: 0 10px;
+  }
+  :where(.sst) .header .copy-btn .kbd {
+    display: none;
+  }
+  @container sst (max-width: 1519px) {
+    :where(.sst) .header .split .btn-primary .tag {
+      display: none;
+    }
+  }
+  @container sst (max-width: 1199px) {
+    :where(.sst) .studio-action .lbl {
+      display: none;
+    }
+    :where(.sst) .studio-action {
+      padding: 0 10px;
+    }
+  }
+  @container sst (max-width: 1219px) {
+    :where(.sst) .header .centre .chip .mono,
+    :where(.sst) .header .centre .chip .meta-txt {
+      display: none;
+    }
+  }
+  @container sst (max-width: 1019px) {
+    :where(.sst) .header {
+      gap: 4px;
+      padding: 0 10px 0 12px;
+    }
+    :where(.sst) .mode-switch {
+      margin-left: 6px;
+    }
+    :where(.sst) .mode-switch button .lbl {
+      display: none !important;
+    }
+    :where(.sst) .header .split .btn-primary:first-child {
+      font-size: 0;
+      gap: 0;
+      padding: 0 12px;
+    }
+    :where(.sst) .header .sep {
+      display: none;
+    }
+    :where(.sst) .studio-actions {
+      margin-left: 2px;
+    }
+  }
+}
+
+
+/* ---------- Wallpaper library ---------- */
+@layer components {
+  :where(.sst) .wall-library {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  :where(.sst) .wall-upload {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 38px;
+    border-radius: 8px;
+    border: 1px dashed var(--rule);
+    background: var(--paper);
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--ink-2);
+  }
+  :where(.sst) .wall-upload:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+  :where(.sst) .wall-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    padding: 4px 0 8px;
+    font: 500 10.5px/1 var(--sc-font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink-2);
+  }
+  :where(.sst) .wall-head:hover {
+    color: var(--ink);
+  }
+  :where(.sst) .wall-chev {
+    width: 11px;
+    height: 11px;
+    transition: transform var(--sc-dur-fast) var(--sc-ease-out);
+  }
+  :where(.sst) .wall-head[aria-expanded="false"] .wall-chev {
+    transform: rotate(-90deg);
+  }
+  :where(.sst) .wall-count {
+    margin-left: auto;
+    color: var(--accent);
+  }
+  :where(.sst) .wall-section + .wall-section {
+    border-top: 1px dashed var(--rule);
+    padding-top: 8px;
+  }
+}
+
+/* ---------- Compact header on small phones ---------- */
+@layer components {
+  @container sst (max-width: 459px) {
+    :where(.sst) .m-top {
+      gap: 4px;
+      padding: 0 8px;
+    }
+    :where(.sst) .m-top .brand {
+      display: none;
+    }
+    :where(.sst) .m-top .btn-primary {
+      font-size: 0;
+      gap: 0;
+      padding: 0 12px;
+    }
+  }
+  @container sst (max-width: 349px) {
+    :where(.sst) .m-top .chip .mono,
+    :where(.sst) .m-top .chip .meta-txt {
+      display: none;
+    }
+  }
+}
+
+/* ---------- Quote library ---------- */
+@layer components {
+  :where(.sst) .quote-tray {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  :where(.sst) .quote-tools {
+    display: flex;
+    gap: 6px;
+  }
+  :where(.sst) .quote-search {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+  :where(.sst) .quote-search input {
+    min-width: 0;
+    flex: 1;
+  }
+  :where(.sst) .quote-search svg {
+    color: var(--ink-3);
+    flex: none;
+  }
+  :where(.sst) .quote-cats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  :where(.sst) .quote-cat {
+    height: 26px;
+    padding: 0 10px;
+    border-radius: 999px;
+    border: 1px solid var(--rule);
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--ink-2);
+    background: var(--paper);
+  }
+  :where(.sst) .quote-cat:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+  :where(.sst) .quote-cat.on {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--paper);
+  }
+  :where(.sst) .quote-list {
+    list-style: none;
+    margin: 0;
+    padding: 2px;
+    max-height: 264px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border-top: 1px dashed var(--rule);
+    border-bottom: 1px dashed var(--rule);
+    padding-block: 8px;
+    scrollbar-width: thin;
+  }
+  :where(.sst) .quote-item {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 9px 11px;
+    border-radius: 8px;
+    text-align: left;
+    background: var(--paper);
+    box-shadow: inset 0 0 0 1px var(--rule);
+  }
+  :where(.sst) .quote-item:hover {
+    box-shadow: inset 0 0 0 1px var(--ink);
+  }
+  :where(.sst) .quote-item.on {
+    box-shadow:
+      inset 0 0 0 1.5px var(--accent),
+      inset 3px 0 0 var(--accent);
+  }
+  :where(.sst) .qi-text {
+    font: 400 15.5px/1.3 var(--sc-font-display);
+    color: var(--ink);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  :where(.sst) .qi-author {
+    font: 500 10.5px/1 var(--sc-font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-3);
+  }
+}
