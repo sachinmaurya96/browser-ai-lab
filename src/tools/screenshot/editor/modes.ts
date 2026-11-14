@@ -89,10 +89,15 @@ export function initialCodeScene(): Scene {
 
 export const DEFAULT_POST_STYLE = "post-sherbet";
 
+/** Today as a post date, e.g. "Nov 14" (editable on the card). */
+export function todayLabel(now = new Date()): string {
+  return now.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
 export function initialPostScene(): Scene {
   const style = getPostStyle(DEFAULT_POST_STYLE)!;
   const s = createScene({
-    content: { ...samplePost("social"), theme: style.theme, accent: style.accent },
+    content: { ...samplePost("social", todayLabel()), theme: style.theme, accent: style.accent },
     meta: { name: "post" },
   });
   return applyStylePatch(s, style.patch, style.id);

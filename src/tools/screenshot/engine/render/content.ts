@@ -11,7 +11,7 @@ import { gaussianBlurRGBA, pixelateRGBA } from "../math/blur";
 import { parseColor, toCss } from "../math/color";
 import { redactAutoFill, surroundLightness } from "../analysis/tone";
 import type { Rect, Size } from "../math/geometry";
-import { stableStringify } from "../math/random";
+import { hashString, stableStringify } from "../math/random";
 import { effectiveCrop } from "../layout/layout";
 import type { Content, CropRect, RedactAnnotation, Scene } from "../scene/types";
 import type { RenderCache } from "./cache";
@@ -49,6 +49,59 @@ export function registerContentRenderer<C extends Content>(r: ContentRenderer<C>
 
 export function getContentRenderer(kind: string): ContentRenderer | undefined {
   return registry.get(kind);
+}
+
+/**
+ * Draw any content into the card. Screenshots apply their own redactions;
+ * drawn content (code, post and quote cards) with blur, pixelate or solid
+ * boxes is rasterized at its on-screen device size, the boxes are applied
+ * exactly as on a screenshot, and the result is drawn in its place.
+ */
+export function drawContent(ctx: Ctx2D, content: Content, dc: ContentDrawContext): void {
+  const renderer = getContentRenderer(content.kind);
+  if (!renderer) return;
+  if (content.kind === "image") return renderer.draw(ctx, content, dc);
+  const redactions = inRect(
+    dc.scene.annotations.filter((a): a is RedactAnnotation => a.kind === "redact"),
+    dc.notes,
+    dc.rect,
+  );
+  if (!redactions.length) return renderer.draw(ctx, content, dc);
+  const W = Math.max(1, Math.round(dc.rect.width * dc.pixelRatio));
+  const H = Math.max(1, Math.round(dc.rect.height * dc.pixelRatio));
+  const key = `drawn:${hashString(stableStringify(content))}:${W}x${H}:${redactionsKey(redactions)}:${dc.pixelRatio.toFixed(4)}`;
+  const raster = dc.cache.get(key, () => {
+    const out = dc.env.createCanvas(W, H);
+    const g = get2d(out, { willReadFrequently: true });
+    g.scale(W / dc.rect.width, H / dc.rect.height);
+    renderer.draw(g, content, {
+      ...dc,
+      rect: { x: 0, y: 0, width: dc.rect.width, height: dc.rect.height },
+      notes: undefined,
+    });
+    for (const r of redactions) {
+      if (r.mode === "solid") fillRedaction(g, r, W, H, drawnSolidFill(g, r, W, H));
+      else applyRedaction(g, r, W, H, dc.pixelRatio);
+    }
+    return { value: out, bytes: W * H * 4 };
+  });
+  ctx.drawImage(raster, dc.rect.x, dc.rect.y, dc.rect.width, dc.rect.height);
+}
+
+/** A solid box's colour on drawn content: its own, or dark/light to suit what it covers. */
+function drawnSolidFill(g: Ctx2D, r: RedactAnnotation, W: number, H: number): string {
+  if (r.fill && r.fill !== "auto") return toCss({ ...parseColor(r.fill), a: 1 });
+  const b = redactionBounds(r, W, H);
+  if (!b) return toCss(redactAutoFill(null));
+  const d = g.getImageData(b.x0, b.y0, b.x1 - b.x0, b.y1 - b.y0).data;
+  let sum = 0;
+  let n = 0;
+  for (let i = 0; i < d.length; i += 16) {
+    sum += (0.2126 * d[i]! + 0.7152 * d[i + 1]! + 0.0722 * d[i + 2]!) / 255;
+    n++;
+  }
+  // Perceptual lightness (cube root of luminance), the scale redactAutoFill expects.
+  return toCss(redactAutoFill(n ? Math.cbrt(sum / n) : null));
 }
 
 // ----------------------------------------------------------------------------
