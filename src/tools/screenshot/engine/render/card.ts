@@ -12,7 +12,7 @@ import { roundedRectPath } from "../math/path";
 import type { Scene } from "../scene/types";
 import { drawAnnotation } from "./annotations";
 import type { RenderCache } from "./cache";
-import { getContentRenderer } from "./content";
+import { drawContent } from "./content";
 import { toCss } from "../math/color";
 import { clipPath, fillPath, fillRoundedRect, shapePath, withState } from "./draw";
 import type { Ctx2D, RenderEnvironment } from "./env";
@@ -83,10 +83,9 @@ export function drawCard(ctx: Ctx2D, scene: Scene, layout: SceneLayout, deps: Ca
   }
 
   // 4. Content, clipped to its rounded rect.
-  const renderer = getContentRenderer(scene.content.kind);
   withState(ctx, () => {
     clipPath(ctx, roundedRectPath(card.content, card.contentRadii, card.smoothing));
-    renderer?.draw(ctx, scene.content, {
+    drawContent(ctx, scene.content, {
       env: deps.env,
       cache: deps.cache,
       assets: deps.assets,

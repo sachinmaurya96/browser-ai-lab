@@ -123,7 +123,7 @@ import { HANDOFF_NAMES_KEY, parseHandoff } from "../lib/handoff";
 import type { LayoutId } from "../engine/scene/types";
 import { prefersReducedMotion } from "../lib/platform";
 import { VideoPreview } from "./video-preview";
-import { type Mode, initialCodeScene, initialPostScene, initialQuoteScene, modeForScene } from "./modes";
+import { type Mode, initialCodeScene, initialPostScene, initialQuoteScene, modeForScene, todayLabel } from "./modes";
 import { APPSTORE_SET_KEY, SetController } from "./appstore";
 import { BATCH_KEY, BatchController } from "./batch";
 import { CutoutController } from "./cutout";
@@ -1848,8 +1848,8 @@ export class EditorApp {
   setPostVariant(variant: PostContent["variant"]): void {
     const cur = this.post;
     if (!cur || cur.variant === variant) return;
-    const sampleFrom = samplePost(cur.variant);
-    const sampleTo = samplePost(variant);
+    const sampleFrom = samplePost(cur.variant, todayLabel());
+    const sampleTo = samplePost(variant, todayLabel());
     const untouched = (k: "text" | "handle" | "date") => cur[k] === sampleFrom[k];
     this.setPost({
       variant,

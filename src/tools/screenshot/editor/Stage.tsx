@@ -311,6 +311,10 @@ export function Stage({ narrow = false }: { narrow?: boolean }) {
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!hasContent) return;
+    // Controls floating on the stage (zoom, tool dock, timeline, notes) keep their own
+    // clicks: a press on them must never start a pan, which captures the pointer.
+    if ((e.target as HTMLElement).closest("button, input, textarea, select, a, [role=slider]"))
+      return;
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     const onComp = compRef.current?.contains(e.target as Node);
     if (pointers.current.size === 2) {

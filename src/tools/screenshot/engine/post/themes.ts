@@ -185,13 +185,14 @@ export function sampleQuote(index = 0): PostContent {
   };
 }
 
-export function samplePost(variant: PostContent["variant"]): PostContent {
+/** The starting card. `date` is passed in (the engine never reads the clock). */
+export function samplePost(variant: PostContent["variant"], date = ""): PostContent {
   return variant === "testimonial"
     ? {
         kind: "post",
         variant,
-        name: "Maya Chen",
-        handle: "Head of Design, Harbor Labs",
+        name: "Sachin",
+        handle: "Maker, Browser AI Lab",
         avatarAssetId: null,
         text: "We used to spend an afternoon making launch screenshots. Now it takes a coffee break, and they look better than anything we made by hand.",
         date: "",
@@ -204,11 +205,11 @@ export function samplePost(variant: PostContent["variant"]): PostContent {
     : {
         kind: "post",
         variant,
-        name: "Maya Chen",
-        handle: "@mayamakes",
+        name: "Sachin",
+        handle: "@sachin",
         avatarAssetId: null,
         text: "Shipped the new onboarding today. Paste a screenshot, pick a style, done. The before and after is honestly a little embarrassing #buildinpublic",
-        date: "Sep 26",
+        date,
         theme: "light",
         rating: 0,
         metrics: { replies: "24", reposts: "118", likes: "1.2K" },
